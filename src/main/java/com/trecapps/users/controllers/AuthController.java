@@ -43,16 +43,17 @@ public class AuthController {
 
     @GetMapping("/token")
     public Mono<ResponseEntity<LoginToken>> authorizeCode(@RequestParam("code")String code,
-                                                          @RequestParam(value = "state", required = false) String state)
+                                                          @RequestParam(value = "state", required = false, defaultValue = "") String state,
+                                                            @RequestParam("Redirect")String redirect)
     {
-        return authService.getTokenFromMSFlow(baseUrl + "/Auth/token", code)
+        return authService.getTokenFromMSFlow(redirect, code)
                 .map((LoginToken token) -> generateResponse(token));
     }
 
     @PostMapping("/refresh")
-    public Mono<ResponseEntity<LoginToken>> refreshCode(@RequestBody String refreshToken)
+    public Mono<ResponseEntity<LoginToken>> refreshCode(@RequestBody String refreshToken, @RequestParam("Redirect")String redirect)
     {
-        return authService.getTokenFromRefresh(baseUrl + "/Auth/token", refreshToken)
+        return authService.getTokenFromRefresh(redirect, refreshToken)
                 .map((LoginToken token) -> generateResponse(token));
     }
 
