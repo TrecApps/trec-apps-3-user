@@ -7,14 +7,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.ClientResponse;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
-
+import org.springframework.web.client.RestTemplate;
 import java.nio.CharBuffer;
 import java.util.Collection;
 import java.util.List;
@@ -24,11 +23,14 @@ import java.util.Set;
 @Service
 public class AuthService {
 
-    WebClient authClient;
+    RestTemplate authClient;
 
     TokenProvider tokenProvider;
 
     String clientId, clientSecret;
+
+    String baseUrl;
+    MultiValueMap<String, String> headers;
 
     @Autowired
     public AuthService(TokenProvider tokenProvider1,
@@ -38,17 +40,17 @@ public class AuthService {
     {
         tokenProvider = tokenProvider1;
 
-        authClient = WebClient.builder()
-                        .baseUrl("https://login.microsoftonline.com/" + tenant1 + "/oauth2/v2.0/")
-                        .defaultHeader("Content-Type:","application/x-www-form-urlencoded")
-                        .build();
+        authClient = new RestTemplate();
+        baseUrl = "https://login.microsoftonline.com/" + tenant1 + "/oauth2/v2.0/";
+        headers = new LinkedMultiValueMap<>();
+        headers.add("Content-Type:","application/x-www-form-urlencoded");
 
         clientId = clientId1;
         clientSecret = clientSecret1;
     }
 
 
-    public Mono<LoginToken> getTokenDirectly(Login login)
+    public ResponseEntity<LoginToken> getTokenDirectly(Login login)
     {
         MultiValueMap<String, CharBuffer> params = new LinkedMultiValueMap<>();
         params.add("client_id", CharBuffer.wrap(clientId));
@@ -58,16 +60,10 @@ public class AuthService {
         params.add("scope", CharBuffer.wrap("user.read%20openid%20profile%20offline_access"));
         params.add("client_secret", CharBuffer.wrap(clientSecret));
 
-        return authClient.post().uri("token")
-                .body(BodyInserters.fromMultipartData(params))
-                .exchangeToMono((ClientResponse response) -> {
-                   if(response.statusCode().is2xxSuccessful())
-                       return response.bodyToMono(LoginToken.class);
-                   return Mono.just(new LoginToken());
-                });
+        return authClient.exchange(baseUrl + "token", HttpMethod.POST, new HttpEntity<>(params, headers), LoginToken.class);
     }
 
-    public Mono<LoginToken> getTokenFromMSFlow(String redirectUri, String code)
+    public ResponseEntity<LoginToken> getTokenFromMSFlow(String redirectUri, String code)
     {
         MultiValueMap<String, CharBuffer> params = new LinkedMultiValueMap<>();
         params.add("client_id", CharBuffer.wrap(clientId));
@@ -77,16 +73,11 @@ public class AuthService {
         params.add("scope", CharBuffer.wrap("user.read%20openid%20profile%20offline_access"));
         params.add("client_secret", CharBuffer.wrap(clientSecret));
 
-        return authClient.post().uri("token")
-                .body(BodyInserters.fromMultipartData(params))
-                .exchangeToMono((ClientResponse response) -> {
-                    if(response.statusCode().is2xxSuccessful())
-                        return response.bodyToMono(LoginToken.class);
-                    return Mono.just(new LoginToken());
-                });
+        return authClient.exchange(baseUrl + "token", HttpMethod.POST, new HttpEntity<>(params, headers), LoginToken.class);
+
     }
 
-    public Mono<LoginToken> getTokenFromRefresh(String redirectUri, String refreshToken)
+    public ResponseEntity<LoginToken> getTokenFromRefresh(String redirectUri, String refreshToken)
     {
         MultiValueMap<String, CharBuffer> params = new LinkedMultiValueMap<>();
         params.add("client_id", CharBuffer.wrap(clientId));
@@ -95,14 +86,9 @@ public class AuthService {
         params.add("refresh_token", CharBuffer.wrap(refreshToken));
         params.add("scope", CharBuffer.wrap("user.read%20openid%20profile%20offline_access"));
         params.add("client_secret", CharBuffer.wrap(clientSecret));
+        return authClient.exchange(baseUrl + "token", HttpMethod.POST, new HttpEntity<>(params, headers), LoginToken.class);
 
-        return authClient.post().uri("token")
-                .body(BodyInserters.fromMultipartData(params))
-                .exchangeToMono((ClientResponse response) -> {
-                    if(response.statusCode().is2xxSuccessful())
-                        return response.bodyToMono(LoginToken.class);
-                    return Mono.just(new LoginToken());
-                });
+
     }
 
 }

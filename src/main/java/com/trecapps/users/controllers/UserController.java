@@ -8,7 +8,6 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
 @RestController("/Users")
 public class UserController {
@@ -17,25 +16,21 @@ public class UserController {
     UserService userService;
 
     @PostMapping("/createUser")
-    public Mono<ResponseEntity<String>> createNewUser(RequestEntity<UserPost> post)
+    public ResponseEntity<String> createNewUser(RequestEntity<UserPost> post)
     {
-        return Mono.just(post)
-                .map((RequestEntity<UserPost> request) -> request.getBody())
-                .flatMap((UserPost postBody) -> {
-                    postBody.setMailNickname(postBody.getMail().substring(0, postBody.getMail().indexOf('@')));
-                    // To-Do: Other validation of the User to be created
+        UserPost postBody = post.getBody();
+        postBody.setMailNickname(postBody.getMail().substring(0, postBody.getMail().indexOf('@')));
 
+        // To-Do: Add Validation to the User Post
 
-                    // End to-Do
-                    return userService.createUser(postBody);
-                });
+        // End To-Do
+        return userService.createUser(postBody);
+
     }
 
     @PostMapping("/passwordUpdate")
-    public Mono<ResponseEntity<String>> updatePassword(RequestEntity<PasswordChange> post)
+    public ResponseEntity<String> updatePassword(RequestEntity<PasswordChange> post)
     {
-        return Mono.just(post)
-                .map((RequestEntity<PasswordChange> request) -> request.getBody())
-                .flatMap((PasswordChange postBody) -> userService.updatePassword(postBody));
+        return userService.updatePassword(post.getBody());
     }
 }

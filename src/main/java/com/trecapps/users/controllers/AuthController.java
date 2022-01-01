@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 
 @RestController("/Auth")
@@ -28,33 +27,30 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public Mono<ResponseEntity<LoginToken>> login(Login login)
+    public ResponseEntity<LoginToken> login(Login login)
     {
-        return authService.getTokenDirectly(login)
-                .map((LoginToken token) -> generateResponse(token));
+        return generateResponse(authService.getTokenDirectly(login).getBody());
     }
 
     @GetMapping("/login")
-    public Mono<ResponseEntity> login()
+    public ResponseEntity login()
     {
         // To-Do: Prep means ot managing state parameter
         return null;
     }
 
     @GetMapping("/token")
-    public Mono<ResponseEntity<LoginToken>> authorizeCode(@RequestParam("code")String code,
+    public ResponseEntity<LoginToken> authorizeCode(@RequestParam("code")String code,
                                                           @RequestParam(value = "state", required = false, defaultValue = "") String state,
                                                             @RequestParam("Redirect")String redirect)
     {
-        return authService.getTokenFromMSFlow(redirect, code)
-                .map((LoginToken token) -> generateResponse(token));
+        return generateResponse(authService.getTokenFromMSFlow(redirect, code).getBody());
     }
 
     @PostMapping("/refresh")
-    public Mono<ResponseEntity<LoginToken>> refreshCode(@RequestBody String refreshToken, @RequestParam("Redirect")String redirect)
+    public ResponseEntity<LoginToken> refreshCode(@RequestBody String refreshToken, @RequestParam("Redirect")String redirect)
     {
-        return authService.getTokenFromRefresh(redirect, refreshToken)
-                .map((LoginToken token) -> generateResponse(token));
+        return generateResponse(authService.getTokenFromRefresh(redirect, refreshToken).getBody());
     }
 
 

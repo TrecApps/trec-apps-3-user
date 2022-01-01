@@ -25,7 +25,7 @@ dependencies {
     implementation 'com.microsoft.azure:applicationinsights-logging-logback:+'
 
     // Spring Boot features
-    implementation 'org.springframework.boot:spring-boot-starter-webflux:+'
+    implementation 'org.springframework.boot:spring-boot-starter-web:+'
     implementation 'org.springframework.boot:spring-boot-starter-actuator:+'
     // DB Support
     implementation 'org.hibernate:hibernate-core:5.4.11.Final'
