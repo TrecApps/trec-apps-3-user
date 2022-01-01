@@ -32,7 +32,7 @@ dependencies {
     implementation 'org.hibernate:hibernate-entitymanager:5.4.11.Final'
     implementation 'javax.validation:validation-api:+'
 
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:+'
+    //implementation 'org.springframework.boot:spring-boot-starter-data-jpa:+'
 
     implementation 'mysql:mysql-connector-java:+' // mySQL
 
