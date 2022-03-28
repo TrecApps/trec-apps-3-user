@@ -8,6 +8,15 @@ version '0.0.1'
 
 repositories {
     mavenCentral()
+
+    maven {
+        url azureRepoUrl
+        name 'tcMavenRepo'
+        credentials {
+            username azureRepoUsername
+            password azureRepoPassword
+        }
+    }
 }
 
 dependencies {
@@ -18,6 +27,9 @@ dependencies {
     implementation 'com.microsoft.graph:microsoft-graph:5.+'
     // Include Azure identity for authentication
     implementation 'com.azure:azure-identity:1.+'
+
+    // Enable Branding
+    implementation 'com.trecapps.base:InfoResource:0.1.2'
 
 
     // Azure Logging

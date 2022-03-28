@@ -6,6 +6,7 @@ import com.trecapps.users.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,9 +29,12 @@ public class UserController {
 
     }
 
+
+
     @PostMapping("/passwordUpdate")
     public ResponseEntity<String> updatePassword(RequestEntity<PasswordChange> post)
     {
-        return userService.updatePassword(post.getBody());
+
+        return userService.updatePassword(post.getBody(), post.getHeaders().getFirst("Authorization"));
     }
 }

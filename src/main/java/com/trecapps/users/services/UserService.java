@@ -58,10 +58,10 @@ public class UserService {
         }
     }
 
-    public ResponseEntity<String> updatePassword(PasswordChange change)
+    public ResponseEntity<String> updatePassword(PasswordChange change, String auth)
     {
         MultiValueMap<String, String> authHeaders = new LinkedMultiValueMap<>(headers);
-        authHeaders.add("Authorization", tokenProvider.getAuthToken());
+        authHeaders.add("Authorization", auth);
 
         switch(graphClient.exchange(baseUrl + "me/changePassword", HttpMethod.POST, new HttpEntity<>(change, authHeaders),String.class).getStatusCode()) {
             case CREATED:
