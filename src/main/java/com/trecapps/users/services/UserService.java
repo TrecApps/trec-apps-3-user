@@ -36,7 +36,7 @@ public class UserService {
 
     public ResponseEntity<String> createUser(UserPost post)
     {
-        graphClient.exchange(baseUrl + "users", HttpMethod.POST, new HttpEntity<>(post, headers), String.class);
+        //graphClient.exchange(baseUrl + "users", HttpMethod.POST, new HttpEntity<>(post, headers), String.class);
 
         switch(graphClient.exchange(baseUrl + "users", HttpMethod.POST, new HttpEntity<>(post, headers), String.class).getStatusCode()) {
             case CREATED:
