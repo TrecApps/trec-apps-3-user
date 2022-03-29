@@ -37,6 +37,9 @@ dependencies {
     implementation 'com.microsoft.azure:applicationinsights-logging-logback:+'
 
     // Spring Boot features
+
+    implementation 'org.springframework.boot:spring-boot-starter:+'
+    implementation 'org.springframework.boot:spring-boot-starter-tomcat:+'
     implementation 'org.springframework.boot:spring-boot-starter-web:+'
     implementation 'org.springframework.boot:spring-boot-starter-actuator:+'
     // DB Support
