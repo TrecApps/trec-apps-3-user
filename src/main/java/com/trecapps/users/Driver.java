@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan({"com.trecapps.users", "com.trecapps.base.InfoResource.models"})
+//@ComponentScan({"com.trecapps.users", "com.trecapps.base.InfoResource.models"})
 public class Driver {
     public static void main(String[] args)
     {
