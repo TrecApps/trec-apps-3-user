@@ -10,7 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
-@RestController("/Auth")
+@RestController
+@RequestMapping("/Auth")
 public class AuthController {
 
     @Autowired

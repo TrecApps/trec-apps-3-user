@@ -1,7 +1,9 @@
 package com.trecapps.users.controllers;
 
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController("/Brands")
+@RestController
+@RequestMapping("/Brands")
 public class BrandController {
 }
