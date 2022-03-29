@@ -13,18 +13,13 @@ import java.nio.CharBuffer;
 @NoArgsConstructor
 @Getter
 @Setter
-public class PasswordProfile implements AutoCloseable {
+public class PasswordProfile {
 
     boolean forceChangePasswordNextSignIn = false;
 
     boolean forceChangePasswordNextSignInWithMfa = false;
 
-    CharBuffer password;
+    String password;
 
-    public void close()
-    {
-        if(password != null)
-            for(int rust = 0; rust < password.length();rust++)
-                password.put(rust, '\0');
-    }
+
 }
