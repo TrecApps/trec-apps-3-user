@@ -44,8 +44,9 @@ public class UserService {
     public ResponseEntity<String> createUser(UserPost post)
     {
         //graphClient.exchange(baseUrl + "users", HttpMethod.POST, new HttpEntity<>(post, headers), String.class);
-        MultiValueMap<String, String> authHeaders = new LinkedMultiValueMap<>(headers);
+        MultiValueMap<String, String> authHeaders = new LinkedMultiValueMap<>();
         authHeaders.add("Authorization", tokenProvider.getAuthToken());
+        authHeaders.add("Content-Type", "application/json");
 
         try
         {
