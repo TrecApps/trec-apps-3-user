@@ -29,7 +29,7 @@ public class UserService {
     {
         baseUrl = "https://graph.microsoft.com/v1.0/";
         headers = new LinkedMultiValueMap<>();
-        headers.add("Content-Type:","application/x-www-form-urlencoded");
+        headers.add("Content-Type","application/x-www-form-urlencoded");
 
         graphClient = new RestTemplate();
 
