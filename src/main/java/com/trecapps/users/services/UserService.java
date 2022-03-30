@@ -47,7 +47,8 @@ public class UserService {
 
         try
         {
-            switch(graphClient.exchange(baseUrl + "users", HttpMethod.POST, new HttpEntity<>(post, authHeaders), String.class).getStatusCode()) {
+            ResponseEntity entity = graphClient.exchange(baseUrl + "users", HttpMethod.POST, new HttpEntity<>(post, authHeaders), String.class);
+            switch(entity.getStatusCode()) {
                 case CREATED:
                 case OK:
                 case NO_CONTENT:
@@ -63,6 +64,7 @@ public class UserService {
                 case BAD_REQUEST:
                     return monotize(new ResponseEntity<String>("Error In your submission!", HttpStatus.BAD_REQUEST));
                 default:
+                    logger.info("Entity contents: {}", entity.getBody());
                     return monotize(new ResponseEntity<String>("Unknown Error Occurred", HttpStatus.INTERNAL_SERVER_ERROR));
             }
         }
