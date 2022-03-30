@@ -31,6 +31,8 @@ public class UserService {
         headers = new LinkedMultiValueMap<>();
         headers.add("Content-Type:","application/x-www-form-urlencoded");
 
+        graphClient = new RestTemplate();
+
         this.tokenProvider = tokenProvider;
     }
 
@@ -72,7 +74,8 @@ public class UserService {
         {
             logger.error("Exception occurred", e);
             logger.info("Exception occurred: {}", e.getMessage());
-            return monotize(new ResponseEntity<String>("Unknown Exception Occurred: " + e.getMessage() + "\n\n" + e.getStackTrace(), HttpStatus.INTERNAL_SERVER_ERROR));
+            e.printStackTrace();
+            return monotize(new ResponseEntity<String>("Unknown Exception Occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR));
         }
 
 
