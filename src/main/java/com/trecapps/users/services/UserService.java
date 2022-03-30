@@ -72,7 +72,7 @@ public class UserService {
         {
             logger.error("Exception occurred", e);
             logger.info("Exception occurred: {}", e.getMessage());
-            return monotize(new ResponseEntity<String>("Unknown Exception Occurred", HttpStatus.INTERNAL_SERVER_ERROR));
+            return monotize(new ResponseEntity<String>("Unknown Exception Occurred: " + e.getMessage() + "\n\n" + e.getStackTrace(), HttpStatus.INTERNAL_SERVER_ERROR));
         }
 
 
