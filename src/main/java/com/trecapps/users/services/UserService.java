@@ -37,8 +37,10 @@ public class UserService {
     public ResponseEntity<String> createUser(UserPost post)
     {
         //graphClient.exchange(baseUrl + "users", HttpMethod.POST, new HttpEntity<>(post, headers), String.class);
+        MultiValueMap<String, String> authHeaders = new LinkedMultiValueMap<>(headers);
+        authHeaders.add("Authorization", tokenProvider.getAuthToken());
 
-        switch(graphClient.exchange(baseUrl + "users", HttpMethod.POST, new HttpEntity<>(post, headers), String.class).getStatusCode()) {
+        switch(graphClient.exchange(baseUrl + "users", HttpMethod.POST, new HttpEntity<>(post, authHeaders), String.class).getStatusCode()) {
             case CREATED:
             case OK:
             case NO_CONTENT:
