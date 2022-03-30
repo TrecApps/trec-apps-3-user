@@ -6,25 +6,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.stereotype.Component;
 
-import java.nio.CharBuffer;
-
 @Component
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class Login implements AutoCloseable {
+public class Login {
 
-    CharBuffer username, password;
+    String username, password;
 
-    public void close()
-    {
-        if(username != null)
-            for(int rust = 0; rust < username.length();rust++)
-                username.put(rust, '\0');
-
-        if(password != null)
-            for(int rust = 0; rust < password.length();rust++)
-                password.put(rust, '\0');
-    }
 }
