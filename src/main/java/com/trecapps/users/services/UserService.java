@@ -71,7 +71,7 @@ public class UserService {
         catch( Exception e)
         {
             logger.error("Exception occurred", e);
-            logger.info("Exception occurred", e.getMessage());
+            logger.info("Exception occurred: {}", e.getMessage());
             return monotize(new ResponseEntity<String>("Unknown Exception Occurred", HttpStatus.INTERNAL_SERVER_ERROR));
         }
 
