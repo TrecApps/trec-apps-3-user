@@ -41,7 +41,7 @@ public class UserService {
         return (ent);
     }
 
-    public ResponseEntity<String> createUser(UserPost post)
+    public ResponseEntity<String> createUser(UserPost post, boolean firstCall)
     {
         //graphClient.exchange(baseUrl + "users", HttpMethod.POST, new HttpEntity<>(post, headers), String.class);
         MultiValueMap<String, String> authHeaders = new LinkedMultiValueMap<>();
@@ -58,6 +58,11 @@ public class UserService {
                 case ACCEPTED:
                     return monotize(new ResponseEntity<String>("Success", HttpStatus.OK));
                 case UNAUTHORIZED:
+                    if(firstCall)
+                    {
+                        tokenProvider.refreshToken();
+                        return createUser(post, false);
+                    }
                 case FORBIDDEN:
                     return monotize(new ResponseEntity<String>("Error Connecting to Azure Active Directory", HttpStatus.INTERNAL_SERVER_ERROR));
                 case NOT_FOUND:

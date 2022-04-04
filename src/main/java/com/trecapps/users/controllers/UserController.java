@@ -32,7 +32,7 @@ public class UserController {
         // To-Do: Add Validation to the User Post
 
         // End To-Do
-        return userService.createUser(postBody);
+        return userService.createUser(postBody, true);
 
     }
 
