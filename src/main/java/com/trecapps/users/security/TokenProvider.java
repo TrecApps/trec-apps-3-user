@@ -45,7 +45,7 @@ public class TokenProvider {
         logger.info("Setting up new Token for Graph calls");
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("client_id", clientId);
-        body.add("scope", "https%3A%2F%2Fgraph.microsoft.com%2F.default");
+        body.add("scope", "https://graph.microsoft.com/.default");
         body.add("client_secret", clientSecret);
         body.add("grant_type", "client_credentials");
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();

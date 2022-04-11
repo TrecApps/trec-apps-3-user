@@ -7,10 +7,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+
+import java.time.OffsetDateTime;
 
 @Service
 public class UserService {
@@ -32,6 +35,7 @@ public class UserService {
         headers.add("Content-Type","application/x-www-form-urlencoded");
 
         graphClient = new RestTemplate();
+        graphClient.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
 
         this.tokenProvider = tokenProvider;
     }
@@ -48,15 +52,17 @@ public class UserService {
         authHeaders.add("Authorization", "Bearer " + tokenProvider.getAuthToken());
         authHeaders.add("Content-Type", "application/json");
 
+        OffsetDateTime birthday = post.getBirthday();
         try
         {
-            ResponseEntity entity = graphClient.exchange(baseUrl + "users", HttpMethod.POST, new HttpEntity<>(post, authHeaders), String.class);
+            ResponseEntity entity = graphClient.exchange(baseUrl + "users", HttpMethod.POST, new HttpEntity<>(post.GetGraphObject(), authHeaders), String.class);
             switch(entity.getStatusCode()) {
                 case CREATED:
                 case OK:
                 case NO_CONTENT:
                 case ACCEPTED:
-                    return monotize(new ResponseEntity<String>("Success", HttpStatus.OK));
+                    //post.setBirthday(birthday);
+                    return monotize(new ResponseEntity<>("Succeeded", HttpStatus.OK));
                 case UNAUTHORIZED:
                     if(firstCall)
                     {
@@ -86,6 +92,22 @@ public class UserService {
 
 
     }
+
+//    private ResponseEntity<String> patchBirthday(UserPost post)
+//    {
+//        MultiValueMap<String, String> authHeaders = new LinkedMultiValueMap<>();
+//        authHeaders.add("Authorization", "Bearer " + tokenProvider.getAuthToken());
+//        authHeaders.add("Content-Type", "application/json");
+//
+//        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+//
+//        body.add("birthday", post.getBirthday().toString());
+//
+//
+//        ResponseEntity entity = graphClient.exchange(baseUrl + "users/" + post.getUserPrincipalName(), HttpMethod.PATCH, new HttpEntity<>(body, authHeaders), String.class);
+//
+//        return new ResponseEntity<>(entity.getBody().toString(), entity.getStatusCode());
+//    }
 
     public ResponseEntity<String> updatePassword(PasswordChange change, String auth)
     {
