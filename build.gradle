@@ -24,6 +24,11 @@ repositories {
     }
 }
 
+jar{
+    archiveClassifier=''
+    enabled = true
+}
+
 dependencies {
 
     implementation 'org.projectlombok:lombok:1.18.20'
