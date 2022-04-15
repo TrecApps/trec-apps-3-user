@@ -1,6 +1,8 @@
 package com.trecapps.users.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trecapps.users.models.PasswordChange;
+import com.trecapps.users.models.TcUser;
 import com.trecapps.users.models.UserPost;
 import com.trecapps.users.security.TokenProvider;
 import org.slf4j.Logger;
@@ -27,9 +29,15 @@ public class UserService {
     String baseUrl;
     MultiValueMap<String, String> headers;
 
+    StorageService storageService;
+
+    ObjectMapper mapper;
+
     @Autowired
-    public UserService(TokenProvider tokenProvider)
+    public UserService(TokenProvider tokenProvider, StorageService storageService1)
     {
+        mapper = new ObjectMapper();
+
         baseUrl = "https://graph.microsoft.com/v1.0/";
         headers = new LinkedMultiValueMap<>();
         headers.add("Content-Type","application/x-www-form-urlencoded");
@@ -38,6 +46,7 @@ public class UserService {
         graphClient.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
 
         this.tokenProvider = tokenProvider;
+        storageService = storageService1;
     }
 
     private static ResponseEntity<String> monotize(ResponseEntity<String> ent)
@@ -53,14 +62,16 @@ public class UserService {
         authHeaders.add("Content-Type", "application/json");
 
         OffsetDateTime birthday = post.getBirthday();
+        String results;
         try
         {
-            ResponseEntity entity = graphClient.exchange(baseUrl + "users", HttpMethod.POST, new HttpEntity<>(post.GetGraphObject(), authHeaders), String.class);
+            ResponseEntity<String> entity = graphClient.exchange(baseUrl + "users", HttpMethod.POST, new HttpEntity<>(post.GetGraphObject(), authHeaders), String.class);
             switch(entity.getStatusCode()) {
                 case CREATED:
                 case OK:
                 case NO_CONTENT:
                 case ACCEPTED:
+                    results = mapper.readTree(entity.getBody()).with("id").asText();
                     //post.setBirthday(birthday);
                     return monotize(new ResponseEntity<>("Succeeded", HttpStatus.OK));
                 case UNAUTHORIZED:
@@ -91,6 +102,12 @@ public class UserService {
         }
 
 
+    }
+
+    void saveUser(UserPost user, String id)
+    {
+        TcUser user1 = new TcUser(user,id);
+        storageService.saveUser(user1);
     }
 
 //    private ResponseEntity<String> patchBirthday(UserPost post)
