@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-<!--    <appender name="aiAppender"-->
-<!--              class="com.microsoft.applicationinsights.logback.ApplicationInsightsAppender">-->
-<!--    </appender>-->
+    <appender name="aiAppender"
+              class="com.microsoft.applicationinsights.logback.ApplicationInsightsAppender">
+    </appender>
     <appender name="Console"
               class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
@@ -13,7 +13,7 @@
     </appender>
 
     <root level="debug">
-<!--        <appender-ref ref="aiAppender" />-->
+        <appender-ref ref="aiAppender" />
         <appender-ref ref="Console" />
     </root>
 </configuration>
