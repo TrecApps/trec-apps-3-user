@@ -3,13 +3,13 @@ package com.trecapps.users.models;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 
+import javax.validation.constraints.Email;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 @Data
-@Component
 public class TcUser {
 
     public TcUser(UserPost post, String id)
@@ -44,6 +44,7 @@ public class TcUser {
     boolean phoneVerified;
 
     // External Email used by the User
+    @Email
     String email;
     boolean emailVerified;
 

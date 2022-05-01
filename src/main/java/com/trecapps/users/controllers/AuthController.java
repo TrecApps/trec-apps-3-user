@@ -20,6 +20,8 @@ public class AuthController {
     @Value("${base.url}")
     String baseUrl;
 
+    @Value("${tenant.url}")String url;
+
     private ResponseEntity<LoginToken> generateResponse(LoginToken token)
     {
         if(token.getAccess_token() == null || token.getAccess_token().length() == 0)
@@ -28,8 +30,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginToken> login(Login login)
+    public ResponseEntity<LoginToken> login(@RequestBody Login login)
     {
+        if(!login.getUsername().endsWith(url))
+            login.setUsername(login.getUsername() + '@' + url);
         return generateResponse(authService.getTokenDirectly(login).getBody());
     }
 

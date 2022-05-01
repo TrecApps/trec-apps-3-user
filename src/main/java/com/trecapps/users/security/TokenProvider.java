@@ -21,13 +21,13 @@ public class TokenProvider {
 
     String token;
 
-    @Value("${tenent.id}")
+    @Value("${azure.activedirectory.tenant-id}")
     String tenantId;
 
-    @Value("${client.id}")
+    @Value("${azure.activedirectory.client-id}")
     String clientId;
 
-    @Value("${client.secret}")
+    @Value("${azure.activedirectory.client-secret}")
     String clientSecret;
 
     long nextToken;

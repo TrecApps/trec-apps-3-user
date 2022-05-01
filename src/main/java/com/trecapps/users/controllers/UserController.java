@@ -1,18 +1,19 @@
 package com.trecapps.users.controllers;
 
 import com.trecapps.users.models.PasswordChange;
+import com.trecapps.users.models.TcUser;
 import com.trecapps.users.models.UserPost;
 import com.trecapps.users.services.UserService;
+import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/Users")
@@ -22,7 +23,7 @@ public class UserController {
 
     String url;
 
-    public UserController(@Value("${tennant.url}")String url, @Autowired
+    public UserController(@Value("${tenant.url}")String url, @Autowired
             UserService userService)
     {
         this.userService = userService;
@@ -49,6 +50,24 @@ public class UserController {
     }
 
 
+    @PutMapping("/UserUpdate")
+    public ResponseEntity<String> updateUser(RequestEntity<TcUser> post, @AuthenticationPrincipal OidcUser user)
+    {
+        // To-Do: Make sure post id and uer id match
+
+
+        // ENd to-Do:
+
+        return userService.updateTcUser(post.getBody());
+    }
+
+    @GetMapping("/Current")
+    public ResponseEntity<TcUser> getUser(@AuthenticationPrincipal OidcUser user)
+    {
+        String id = user.getClaims().get("id").toString();
+
+        return userService.getTcUser(id);
+    }
 
     @PostMapping("/passwordUpdate")
     public ResponseEntity<String> updatePassword(RequestEntity<PasswordChange> post)

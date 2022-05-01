@@ -27,7 +27,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity security) throws Exception
     {
-        security
+        security.csrf().disable()
                 .authorizeRequests()
                 .antMatchers(restrictedEndpoints)
                 .authenticated()

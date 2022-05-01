@@ -1,9 +1,6 @@
 package com.trecapps.users.models;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -11,6 +8,7 @@ import org.springframework.stereotype.Component;
 @NoArgsConstructor
 @Getter
 @Setter
+@ToString
 public class Login {
 
     String username, password;

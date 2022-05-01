@@ -27,16 +27,16 @@ public class AuthService {
 
     @Autowired
     public AuthService(TokenProvider tokenProvider1,
-                       @Value("${tenent.id}") String tenant1,
-                       @Value("${client.id}") String clientId1,
-                       @Value("${client.secret}") String clientSecret1)
+                       @Value("${azure.activedirectory.tenant-id}") String tenant1,
+                       @Value("${azure.activedirectory.client-id}") String clientId1,
+                       @Value("${azure.activedirectory.client-secret}") String clientSecret1)
     {
         tokenProvider = tokenProvider1;
 
         authClient = new RestTemplate();
         baseUrl = "https://login.microsoftonline.com/" + tenant1 + "/oauth2/v2.0/";
         headers = new LinkedMultiValueMap<>();
-        headers.add("Content-Type:","application/x-www-form-urlencoded");
+        headers.add("Content-Type","application/x-www-form-urlencoded");
 
         clientId = clientId1;
         clientSecret = clientSecret1;
@@ -45,6 +45,8 @@ public class AuthService {
 
     public ResponseEntity<LoginToken> getTokenDirectly(Login login)
     {
+        //authClient.exchange(baseUrl + "authorize", )
+
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("client_id", clientId);
         params.add("grant_type", "password");

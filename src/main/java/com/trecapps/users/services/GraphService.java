@@ -18,10 +18,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class GraphService {
 
-    @Value("${tenent.id}")
-    String tenentId;
+    @Value("${azure.activedirectory.tenant-id}")
+    String tenantId;
 
-    @Value("${client.id}")
+    @Value("${azure.activedirectory.client-id}")
     String clientId;
 
     Logger logger = LoggerFactory.getLogger(GraphService.class);
@@ -35,7 +35,7 @@ public class GraphService {
             return;
         final DeviceCodeCredential credential = new DeviceCodeCredentialBuilder()
                 .clientId(clientId)
-                .tenantId(tenentId)
+                .tenantId(tenantId)
                 .challengeConsumer(challenge -> logger.info(challenge.getMessage()))
                 .build();
 

@@ -32,7 +32,7 @@ jar{
 dependencies {
 
     implementation 'org.projectlombok:lombok:1.18.20'
-    annotationProcessor 'org.projectlombok:lombok:1.18.8'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
     // Include the sdk as a dependency
     implementation 'com.microsoft.graph:microsoft-graph:5.+'
     // Include Azure identity for authentication
@@ -51,7 +51,7 @@ dependencies {
     implementation 'com.microsoft.azure:applicationinsights-spring-boot-starter:+'
     implementation 'com.microsoft.azure:applicationinsights-logging-logback:+'
 
-    implementation 'com.azure.spring:azure-spring-boot-starter-storage:+'
+    implementation 'com.azure:azure-storage-blob:+'
 
     // Spring Boot features
 
@@ -66,6 +66,9 @@ dependencies {
     implementation 'org.hibernate:hibernate-core:5.4.11.Final'
     implementation 'org.hibernate:hibernate-entitymanager:5.4.11.Final'
     implementation 'javax.validation:validation-api:+'
+
+    implementation "io.projectreactor.netty:reactor-netty-core:+"
+    implementation "io.projectreactor.netty:reactor-netty-http:+"
 
     //implementation 'org.springframework.boot:spring-boot-starter-data-jpa:+'
 

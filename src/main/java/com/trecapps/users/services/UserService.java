@@ -1,5 +1,6 @@
 package com.trecapps.users.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trecapps.users.models.PasswordChange;
 import com.trecapps.users.models.TcUser;
@@ -71,7 +72,7 @@ public class UserService {
                 case OK:
                 case NO_CONTENT:
                 case ACCEPTED:
-                    results = mapper.readTree(entity.getBody()).with("id").asText();
+                    results = mapper.readTree(entity.getBody()).findValue("id").asText();
                     //post.setBirthday(birthday);
                     return monotize(new ResponseEntity<>("Succeeded", HttpStatus.OK));
                 case UNAUTHORIZED:
@@ -104,10 +105,58 @@ public class UserService {
 
     }
 
+    public boolean isValidPhone(String phone)
+    {
+        // To-Do: Validate Phone
+        return true;
+    }
+
     void saveUser(UserPost user, String id)
     {
         TcUser user1 = new TcUser(user,id);
         storageService.saveUser(user1);
+    }
+
+    public ResponseEntity<TcUser> getTcUser(String id)
+    {
+        try {
+            return new ResponseEntity<TcUser>(storageService.retrieveUser(id), HttpStatus.OK);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public ResponseEntity<String> updateTcUser(TcUser user)
+    {
+        try {
+            TcUser storedUser = storageService.retrieveUser(user.getId());
+
+            storedUser.setBirthdaySetting(user.getBirthdaySetting());
+            storedUser.setAddress(user.getAddress());
+            storedUser.setProfilePic(user.getProfilePic());
+
+            if(!storedUser.getEmail().equals(user.getEmail()))
+            {
+                storedUser.setEmail(user.getEmail());
+                storedUser.setEmailVerified(false);
+            }
+
+            if(!storedUser.getMobilePhone().equals(user.getMobilePhone()) && isValidPhone(user.getMobilePhone()))
+            {
+                storedUser.setMobilePhone(user.getMobilePhone());
+                storedUser.setPhoneVerified(false);
+            }
+
+
+            storageService.saveUser(storedUser);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return new ResponseEntity<String>("Failed to Register User info with Azure Storage", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>("Updated!", HttpStatus.OK);
+
     }
 
 //    private ResponseEntity<String> patchBirthday(UserPost post)
