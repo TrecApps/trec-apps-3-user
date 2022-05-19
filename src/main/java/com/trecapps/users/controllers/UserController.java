@@ -1,17 +1,24 @@
 package com.trecapps.users.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.trecapps.auth.models.TrecAuthentication;
+import com.trecapps.auth.models.primary.TrecAccount;
+import com.trecapps.auth.services.TrecAccountService;
+import com.trecapps.auth.services.UserStorageService;
 import com.trecapps.users.models.PasswordChange;
 import com.trecapps.users.models.TcUser;
 import com.trecapps.users.models.UserPost;
-import com.trecapps.users.services.UserService;
-import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,60 +26,121 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/Users")
 public class UserController {
 
-    UserService userService;
+    TrecAccountService userService;
+
+    UserStorageService userStorageService;
 
     String url;
 
     public UserController(@Value("${tenant.url}")String url, @Autowired
-            UserService userService)
+            TrecAccountService userService,
+                          UserStorageService userStorageService1)
     {
         this.userService = userService;
         this.url = url;
+        this.userStorageService = userStorageService1;
     }
 
 
     Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @PostMapping("/createUser")
-    public ResponseEntity<String> createNewUser(RequestEntity<UserPost> post)
+    public ResponseEntity createNewUser(RequestEntity<UserPost> post)
     {
         logger.info("Creating New User!");
         UserPost postBody = post.getBody();
-        postBody.setUserPrincipalName(postBody.getMailNickname() + "@" + url);
 
         logger.info("Creating logger with User Principal name {}", postBody.getUserPrincipalName());
 
         // To-Do: Add Validation to the User Post
 
         // End To-Do
-        return userService.createUser(postBody, true);
 
+        TrecAccount newAccount = new TrecAccount();
+        newAccount.setPasswordHash(postBody.getPasswordProfile().getPassword());
+        newAccount.setUsername(postBody.getUserPrincipalName());
+
+
+
+        newAccount =  userService.saveNewAccount(newAccount);
+
+        if(newAccount == null)
+        {
+            return new ResponseEntity("Account Exists", HttpStatus.BAD_REQUEST);
+        }
+
+        userStorageService.saveUser(new TcUser(postBody, newAccount.getId()).getAuthUser());
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+
+        context.setAuthentication(new TrecAuthentication(newAccount));
+
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
 
     @PutMapping("/UserUpdate")
-    public ResponseEntity<String> updateUser(RequestEntity<TcUser> post, @AuthenticationPrincipal OidcUser user)
+    public ResponseEntity<String> updateUser(RequestEntity<TcUser> post)
     {
+        TcUser user = post.getBody();
         // To-Do: Make sure post id and uer id match
+        SecurityContext context = SecurityContextHolder.getContext();
+        TrecAuthentication auth = (TrecAuthentication) context.getAuthentication();
 
-
+        if(!auth.getAccount().getId().equals(user.getId()))
+            return new ResponseEntity<>("Mismatched IDs", HttpStatus.FORBIDDEN);
         // ENd to-Do:
 
-        return userService.updateTcUser(post.getBody());
+        try {
+            com.trecapps.auth.models.TcUser existingEntry = userStorageService.retrieveUser(user.getId());
+
+            user.setPhoneVerified(existingEntry.isPhoneVerified());
+            user.setRestrictions(existingEntry.getRestrictions());
+            user.setEmailVerified(existingEntry.isEmailVerified());
+            user.setCredibilityRating(existingEntry.getCredibilityRating());
+
+            // To-Do: continue Checks
+
+
+            // End To-Do, here, assume all checks re valid
+
+            userStorageService.saveUser(user.getAuthUser());
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return new ResponseEntity<>("Success", HttpStatus.OK);
     }
 
     @GetMapping("/Current")
-    public ResponseEntity<TcUser> getUser(@AuthenticationPrincipal OidcUser user)
+    public ResponseEntity<TcUser> getUser()
     {
-        String id = user.getClaims().get("id").toString();
+        logger.info("Retrieving User");
 
-        return userService.getTcUser(id);
+        try {
+            com.trecapps.auth.models.TcUser user = userStorageService.retrieveUser(((TrecAuthentication) SecurityContextHolder.getContext().getAuthentication()).getAccount().getId());
+
+            return new ResponseEntity<>(TcUser.getUserFromAuthUser(user), HttpStatus.OK);
+        } catch(NullPointerException e)
+        {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        catch(JsonProcessingException e)
+        {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping("/passwordUpdate")
     public ResponseEntity<String> updatePassword(RequestEntity<PasswordChange> post)
     {
+        PasswordChange change = post.getBody();
+        ;
+        boolean result = userService.changePassword(
+                ((TrecAuthentication)SecurityContextHolder.getContext().getAuthentication()).getAccount(),
+                change.getCurrentPassword().toString(),
+                change.getNewPassword().toString());
 
-        return userService.updatePassword(post.getBody(), post.getHeaders().getFirst("Authorization"));
+        return new ResponseEntity<>(result ? "Success" : "Failed!", result ? HttpStatus.OK :HttpStatus.UNAUTHORIZED);
     }
 }

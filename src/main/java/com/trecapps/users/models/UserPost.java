@@ -1,7 +1,6 @@
 package com.trecapps.users.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.microsoft.graph.models.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

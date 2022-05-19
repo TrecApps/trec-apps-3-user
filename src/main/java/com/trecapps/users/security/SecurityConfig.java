@@ -1,27 +1,31 @@
 package com.trecapps.users.security;
 
-import com.azure.spring.aad.webapp.AADOAuth2UserService;
-import com.azure.spring.autoconfigure.aad.AADAuthenticationProperties;
+import com.trecapps.auth.services.TrecAccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 @EnableWebSecurity
 @Configuration
+@Order(1)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    SecurityConfig(AADAuthenticationProperties aadAuthProps)
+    SecurityConfig(TrecAccountService trecAccountService1)
     {
-        aadoAuth2UserService = new AADOAuth2UserService(aadAuthProps);
+        //aadAuthProps.setRedirectUriTemplate("http://localhost:4200/api");
+        trecAccountService = trecAccountService1;
+
     }
-    AADOAuth2UserService aadoAuth2UserService;
+    TrecAccountService trecAccountService;
 
     String[] restrictedEndpoints = {
-            "/Users/passwordUpdate"
+            "/Users/passwordUpdate",
+            "/Users/Current"
     };
 
     @Override
@@ -36,17 +40,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest()
                 .permitAll()
                 .and()
-                .oauth2Login()
-                .userInfoEndpoint()
-                .oidcUserService(getTrecDirectoryService());
+                .userDetailsService(trecAccountService)
+                ;
     }
 
 
 
-    @Bean
-    protected TrecActiveDirectoryService getTrecDirectoryService()
-    {
-        return new TrecActiveDirectoryService(aadoAuth2UserService);
-    }
+
 
 }
