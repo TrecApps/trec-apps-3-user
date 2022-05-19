@@ -1,5 +1,8 @@
 package com.trecapps.users.controllers;
 
+import com.trecapps.auth.models.TrecAuthentication;
+import com.trecapps.auth.models.primary.TrecAccount;
+import com.trecapps.auth.services.JwtTokenService;
 import com.trecapps.auth.services.TrecAccountService;
 import com.trecapps.users.models.Login;
 import com.trecapps.users.models.LoginToken;
@@ -9,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -18,6 +23,9 @@ public class AuthController {
 
     @Autowired
     TrecAccountService authService;
+
+    @Autowired
+    JwtTokenService jwtTokenService;
 
     @Autowired
     StateService stateService;
@@ -40,14 +48,23 @@ public class AuthController {
 //        if(!login.getUsername().endsWith(url))
 //            login.setUsername(login.getUsername() + '@' + url);
 //        return generateResponse(authService.(login).getBody());
-        return null;
-    }
+        TrecAccount account = authService.logInUsername(login.getUsername(), login.getPassword());
 
-    @GetMapping("/login")
-    public ResponseEntity login()
-    {
-        // To-Do: Prep means ot managing state parameter
-        return new ResponseEntity(stateService.generateState(), HttpStatus.OK);
+        if(account == null)
+            return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+        String userToken = jwtTokenService.generateToken(account, null);
+        String refreshToken = jwtTokenService.generateRefreshToken(account);
+
+        if(userToken == null)
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+
+        SecurityContext secContext = SecurityContextHolder.createEmptyContext();
+        secContext.setAuthentication(new TrecAuthentication(account));
+        LoginToken ret = new LoginToken();
+        ret.setToken_type("User");
+        ret.setAccess_token(userToken);
+        ret.setRefresh_token(refreshToken);
+        return new ResponseEntity<>(ret, HttpStatus.OK);
     }
 
 

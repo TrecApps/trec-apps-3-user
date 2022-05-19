@@ -38,7 +38,7 @@ dependencies {
     // Enable Branding
     implementation 'com.trecapps.base:InfoResource:0.1.2'
     //Enable Trec-Auth
-    implementation 'com.trecapps.auth:TrecAuth:0.0.3'
+    implementation 'com.trecapps.auth:TrecAuth:0.0.5'
 
     // Security Dependencies
     implementation 'org.springframework.boot:spring-boot-starter-security:+'
