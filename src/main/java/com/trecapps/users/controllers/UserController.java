@@ -3,8 +3,10 @@ package com.trecapps.users.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
+import com.trecapps.auth.services.JwtTokenService;
 import com.trecapps.auth.services.TrecAccountService;
 import com.trecapps.auth.services.UserStorageService;
+import com.trecapps.users.models.LoginToken;
 import com.trecapps.users.models.PasswordChange;
 import com.trecapps.users.models.TcUser;
 import com.trecapps.users.models.UserPost;
@@ -30,15 +32,19 @@ public class UserController {
 
     UserStorageService userStorageService;
 
+    JwtTokenService jwtTokenService;
+
     String url;
 
-    public UserController(@Value("${tenant.url}")String url, @Autowired
-            TrecAccountService userService,
-                          UserStorageService userStorageService1)
+    public UserController(@Value("${tenant.url}")String url,
+            @Autowired TrecAccountService userService,
+            @Autowired UserStorageService userStorageService1,
+            @Autowired JwtTokenService jwtTokenService1)
     {
         this.userService = userService;
         this.url = url;
         this.userStorageService = userStorageService1;
+        this.jwtTokenService = jwtTokenService1;
     }
 
 
@@ -75,7 +81,11 @@ public class UserController {
 
         context.setAuthentication(new TrecAuthentication(newAccount));
 
-        return new ResponseEntity(HttpStatus.NO_CONTENT);
+        LoginToken token = new LoginToken();
+        token.setRefresh_token(jwtTokenService.generateRefreshToken(newAccount));
+        token.setAccess_token(jwtTokenService.generateToken(newAccount, null));
+
+        return new ResponseEntity(token, HttpStatus.NO_CONTENT);
     }
 
 
