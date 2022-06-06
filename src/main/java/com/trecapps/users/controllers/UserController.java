@@ -1,12 +1,12 @@
 package com.trecapps.users.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.trecapps.auth.models.LoginToken;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.services.JwtTokenService;
 import com.trecapps.auth.services.TrecAccountService;
 import com.trecapps.auth.services.UserStorageService;
-import com.trecapps.users.models.LoginToken;
 import com.trecapps.users.models.PasswordChange;
 import com.trecapps.users.models.TcUser;
 import com.trecapps.users.models.UserPost;
@@ -77,15 +77,18 @@ public class UserController {
 
         userStorageService.saveUser(new TcUser(postBody, newAccount.getId()).getAuthUser());
 
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
 
-        context.setAuthentication(new TrecAuthentication(newAccount));
 
         LoginToken token = new LoginToken();
         token.setRefresh_token(jwtTokenService.generateRefreshToken(newAccount));
         token.setAccess_token(jwtTokenService.generateToken(newAccount, null));
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        TrecAuthentication tAuth = new TrecAuthentication(newAccount);
+        tAuth.setLoginToken(token);
+        context.setAuthentication(tAuth);
+        SecurityContextHolder.setContext(context);
 
-        return new ResponseEntity(token, HttpStatus.NO_CONTENT);
+        return new ResponseEntity(token, HttpStatus.OK);
     }
 
 
@@ -137,6 +140,7 @@ public class UserController {
         }
         catch(JsonProcessingException e)
         {
+            e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

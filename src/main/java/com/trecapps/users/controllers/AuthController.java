@@ -1,11 +1,11 @@
 package com.trecapps.users.controllers;
 
+import com.trecapps.auth.models.LoginToken;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.services.JwtTokenService;
 import com.trecapps.auth.services.TrecAccountService;
 import com.trecapps.users.models.Login;
-import com.trecapps.users.models.LoginToken;
 import com.trecapps.users.models.TokenRequest;
 import com.trecapps.users.services.StateService;
 import org.springframework.beans.factory.annotation.Autowired;
