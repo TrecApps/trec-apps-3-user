@@ -58,12 +58,17 @@ public class AuthController {
         if(userToken == null)
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 
-        SecurityContext secContext = SecurityContextHolder.createEmptyContext();
-        secContext.setAuthentication(new TrecAuthentication(account));
+
         LoginToken ret = new LoginToken();
         ret.setToken_type("User");
         ret.setAccess_token(userToken);
         ret.setRefresh_token(refreshToken);
+
+        SecurityContext secContext = SecurityContextHolder.createEmptyContext();
+        TrecAuthentication tAuth = new TrecAuthentication(account);
+        tAuth.setLoginToken(ret);
+        secContext.setAuthentication(tAuth);
+        SecurityContextHolder.setContext(secContext);
         return new ResponseEntity<>(ret, HttpStatus.OK);
     }
 
