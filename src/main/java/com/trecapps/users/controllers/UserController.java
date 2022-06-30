@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -81,7 +82,7 @@ public class UserController {
 
         LoginToken token = new LoginToken();
         token.setRefresh_token(jwtTokenService.generateRefreshToken(newAccount));
-        token.setAccess_token(jwtTokenService.generateToken(newAccount, null));
+        token.setAccess_token(jwtTokenService.generateToken(newAccount, null,null));
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         TrecAuthentication tAuth = new TrecAuthentication(newAccount);
         tAuth.setLoginToken(token);
@@ -92,7 +93,7 @@ public class UserController {
     }
 
 
-    @PutMapping("/UserUpdate")
+    @PutMapping(value = "/UserUpdate", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> updateUser(RequestEntity<TcUser> post)
     {
         TcUser user = post.getBody();

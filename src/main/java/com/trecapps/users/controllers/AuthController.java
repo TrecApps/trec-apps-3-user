@@ -52,7 +52,7 @@ public class AuthController {
 
         if(account == null)
             return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
-        String userToken = jwtTokenService.generateToken(account, null);
+        String userToken = jwtTokenService.generateToken(account, null, null);
         String refreshToken = jwtTokenService.generateRefreshToken(account);
 
         if(userToken == null)

@@ -25,7 +25,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     String[] restrictedEndpoints = {
             "/Users/passwordUpdate",
-            "/Users/Current"
+            "/Users/Current",
+            "/Users/UserUpdate",
+            "/Sessions/**"
     };
 
     @Override
