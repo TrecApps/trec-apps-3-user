@@ -5,6 +5,7 @@ import com.trecapps.auth.models.LoginToken;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.services.JwtTokenService;
+import com.trecapps.auth.services.SessionManager;
 import com.trecapps.auth.services.TrecAccountService;
 import com.trecapps.auth.services.UserStorageService;
 import com.trecapps.users.models.PasswordChange;
@@ -81,11 +82,17 @@ public class UserController {
 
 
         LoginToken token = new LoginToken();
+        //sessionM
+
         token.setRefresh_token(jwtTokenService.generateRefreshToken(newAccount));
         token.setAccess_token(jwtTokenService.generateToken(newAccount, null,null));
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         TrecAuthentication tAuth = new TrecAuthentication(newAccount);
+
         tAuth.setLoginToken(token);
+        String sessionId = jwtTokenService.getSessionId(token.getAccess_token());
+        logger.info("Session {} generated!", sessionId);
+        tAuth.setSessionId(sessionId);
         context.setAuthentication(tAuth);
         SecurityContextHolder.setContext(context);
 

@@ -8,6 +8,8 @@ import com.trecapps.auth.services.TrecAccountService;
 import com.trecapps.users.models.Login;
 import com.trecapps.users.models.TokenRequest;
 import com.trecapps.users.services.StateService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,8 @@ public class AuthController {
     String baseUrl;
 
     @Value("${tenant.url}")String url;
+
+    Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     private ResponseEntity<LoginToken> generateResponse(LoginToken token)
     {
@@ -66,6 +70,9 @@ public class AuthController {
 
         SecurityContext secContext = SecurityContextHolder.createEmptyContext();
         TrecAuthentication tAuth = new TrecAuthentication(account);
+        String sessionId = jwtTokenService.getSessionId(ret.getAccess_token());
+        logger.info("Session {} generated!", sessionId);
+        tAuth.setSessionId(sessionId);
         tAuth.setLoginToken(ret);
         secContext.setAuthentication(tAuth);
         SecurityContextHolder.setContext(secContext);
