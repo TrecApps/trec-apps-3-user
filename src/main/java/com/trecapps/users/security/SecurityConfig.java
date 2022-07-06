@@ -30,7 +30,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/Users/passwordUpdate",
             "/Users/Current",
             "/Users/UserUpdate",
-            "/Sessions/**"
+            "/Sessions/**",
+            "/Email/**"
     };
 
     @Override
