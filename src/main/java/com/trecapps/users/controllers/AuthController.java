@@ -55,7 +55,9 @@ public class AuthController {
 //            login.setUsername(login.getUsername() + '@' + url);
 //        return generateResponse(authService.(login).getBody());
         TrecAccount account = authService.logInUsername(login.getUsername(), login.getPassword());
-        
+
+        logger.info("User Agent String is: {}", request.getHeader("User-Agent"));
+
         if(account == null)
             return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
         String userToken = jwtTokenService.generateToken(account, null, null);
