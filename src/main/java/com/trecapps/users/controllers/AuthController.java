@@ -18,6 +18,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+
 
 @RestController
 @RequestMapping("/Auth")
@@ -47,13 +49,13 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginToken> login(@RequestBody Login login)
+    public ResponseEntity<LoginToken> login(@RequestBody Login login, HttpServletRequest request)
     {
 //        if(!login.getUsername().endsWith(url))
 //            login.setUsername(login.getUsername() + '@' + url);
 //        return generateResponse(authService.(login).getBody());
         TrecAccount account = authService.logInUsername(login.getUsername(), login.getPassword());
-
+        
         if(account == null)
             return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
         String userToken = jwtTokenService.generateToken(account, null, null);
