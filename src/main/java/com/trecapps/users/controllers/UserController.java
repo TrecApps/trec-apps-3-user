@@ -85,7 +85,7 @@ public class UserController {
         //sessionM
 
         token.setRefresh_token(jwtTokenService.generateRefreshToken(newAccount));
-        token.setAccess_token(jwtTokenService.generateToken(newAccount, null,null));
+        token.setAccess_token(jwtTokenService.generateToken(newAccount, post.getHeaders().getFirst("User-Agent"),null));
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         TrecAuthentication tAuth = new TrecAuthentication(newAccount);
 
