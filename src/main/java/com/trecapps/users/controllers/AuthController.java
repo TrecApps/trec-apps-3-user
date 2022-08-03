@@ -4,6 +4,7 @@ import com.trecapps.auth.models.LoginToken;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.services.JwtTokenService;
+import com.trecapps.auth.services.SessionManager;
 import com.trecapps.auth.services.TrecAccountService;
 import com.trecapps.users.models.Login;
 import com.trecapps.users.models.TokenRequest;
@@ -33,6 +34,9 @@ public class AuthController {
 
     @Autowired
     StateService stateService;
+
+    @Autowired
+    SessionManager sessionManager;
 
     @Value("${base.url}")
     String baseUrl;
@@ -91,5 +95,18 @@ public class AuthController {
         return null;
     }
 
+
+    @GetMapping("/logout")
+    public ResponseEntity logout()
+    {
+        TrecAuthentication trecAuth = (TrecAuthentication) SecurityContextHolder.getContext().getAuthentication();
+
+        String sessionId = trecAuth.getSessionId();
+
+        boolean result = sessionManager.removeSession(trecAuth.getAccount().getId(), sessionId);
+
+        return result ? new ResponseEntity(HttpStatus.NO_CONTENT) :
+                new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
 }
