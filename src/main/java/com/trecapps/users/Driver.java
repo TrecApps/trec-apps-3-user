@@ -5,7 +5,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan({"com.trecapps.users.*", "com.trecapps.base.InfoResource.models", "com.trecapps.auth.*"})
+@ComponentScan({
+        "com.trecapps.users.*",                     // Scan this app
+        "com.trecapps.base.InfoResource.models",    // usable models
+        "com.trecapps.auth.*",                      // Authentication library
+        "com.trecapps.pictures"})                   // picture management
 public class Driver {
     public static void main(String[] args)
     {
