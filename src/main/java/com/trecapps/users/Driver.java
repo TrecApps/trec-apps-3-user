@@ -9,7 +9,7 @@ import org.springframework.context.annotation.ComponentScan;
         "com.trecapps.users.*",                     // Scan this app
         "com.trecapps.base.InfoResource.models",    // usable models
         "com.trecapps.auth.*",                      // Authentication library
-        "com.trecapps.pictures"})                   // picture management
+        "com.trecapps.pictures.*"})                   // picture management
 public class Driver {
     public static void main(String[] args)
     {

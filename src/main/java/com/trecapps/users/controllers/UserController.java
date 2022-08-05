@@ -2,6 +2,7 @@ package com.trecapps.users.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.LoginToken;
+import com.trecapps.auth.models.TokenTime;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.services.JwtTokenService;
@@ -25,6 +26,9 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import java.time.OffsetDateTime;
 
 @RestController
 @RequestMapping("/Users")
@@ -53,7 +57,7 @@ public class UserController {
     Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @PostMapping("/createUser")
-    public ResponseEntity createNewUser(RequestEntity<UserPost> post)
+    public ResponseEntity createNewUser(RequestEntity<UserPost> post, HttpServletRequest request)
     {
         logger.info("Creating New User!");
         UserPost postBody = post.getBody();
@@ -84,8 +88,21 @@ public class UserController {
         LoginToken token = new LoginToken();
         //sessionM
 
-        token.setRefresh_token(jwtTokenService.generateRefreshToken(newAccount));
-        token.setAccess_token(jwtTokenService.generateToken(newAccount, post.getHeaders().getFirst("User-Agent"),null));
+        TokenTime userToken = jwtTokenService.generateToken(newAccount, request.getHeader("User-Agent"), null, false);
+        String refreshToken = jwtTokenService.generateRefreshToken(newAccount, null, userToken.getSession());
+
+        if(userToken == null)
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+
+
+        LoginToken ret = new LoginToken();
+        ret.setToken_type("User");
+        ret.setAccess_token(userToken.getToken());
+        ret.setRefresh_token(refreshToken);
+
+        OffsetDateTime exp = userToken.getExpiration();
+        if(exp != null)
+            ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         TrecAuthentication tAuth = new TrecAuthentication(newAccount);
 
