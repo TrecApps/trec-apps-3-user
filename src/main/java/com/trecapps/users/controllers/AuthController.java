@@ -63,6 +63,8 @@ public class AuthController {
 
         if(account == null)
             return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+        if(account.getId() == null)
+            return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
         TokenTime userToken = jwtTokenService.generateToken(account, request.getHeader("User-Agent"), null, !Boolean.TRUE.equals(login.getStayLoggedIn()));
         String refreshToken = jwtTokenService.generateRefreshToken(account, null, userToken.getSession());
 
