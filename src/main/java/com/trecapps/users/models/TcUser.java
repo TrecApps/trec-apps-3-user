@@ -2,12 +2,11 @@ package com.trecapps.users.models;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.Email;
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -110,7 +109,7 @@ public class TcUser {
     String[] address;
 
     // External Profiles
-    List<UUID> brands;
+    Set<UUID> brands;
     Map<UUID, UUID> brandSettings; // Device/App setting determining which Brand the User is currently id-ing as
 
     String restrictions; // Semicolon restricted details on the claims against this user
