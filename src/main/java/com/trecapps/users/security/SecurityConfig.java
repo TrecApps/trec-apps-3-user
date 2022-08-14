@@ -31,7 +31,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/Users/Current",
             "/Users/UserUpdate",
             "/Sessions/**",
-            "/Email/**"
+            "/Email/**",
+            "/Brands/list",
+            "/Brands/New",
+            "/Brands/NewOwner/**",
+            "/Brands/login"
     };
 
     @Override
