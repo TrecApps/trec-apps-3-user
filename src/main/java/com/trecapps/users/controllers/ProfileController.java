@@ -7,6 +7,8 @@ import com.trecapps.pictures.services.PictureManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -61,6 +63,32 @@ public class ProfileController {
 
         String[] results = pictureManager.setProfile(trecAuth.getAccount().getId(), id).split("[:]");
         return new ResponseEntity<>(results[1], HttpStatus.valueOf(results[0]));
+    }
+
+    @GetMapping("/file/{fileName}")
+    ResponseEntity<byte[]> getProfilePicture(@PathVariable("fileName")String fileName)
+    {
+        String[] filePieces = fileName.split("[.]");
+        String name = filePieces[0];
+        for(int rust = 1; rust < (filePieces.length - 1); rust++)
+            name = "." + filePieces[rust];
+
+        byte[] data = pictureManager.getProfilePic(name, filePieces[filePieces.length -1]);
+        if(data == null)
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        MultiValueMap<String, String> header = new LinkedMultiValueMap<>();
+        header.add("Content-type", String.format("image/%s", filePieces[filePieces.length - 1].toLowerCase(Locale.ROOT)));
+        return new ResponseEntity<byte[]>(data, header, HttpStatus.OK);
+    }
+
+    @GetMapping("/imageType/{userId}")
+    ResponseEntity<String> getProfileExtension(@PathVariable String userId)
+    {
+        String extension = pictureManager.getProfilePicName(userId);
+        if (extension == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        MultiValueMap<String, String> header = new LinkedMultiValueMap<>();
+        header.add("Content-type", "text/plain");
+        return new ResponseEntity<>(extension, header, HttpStatus.OK);
     }
 
     @GetMapping("/{userId}")
