@@ -24,6 +24,7 @@ public class ProfileController {
             "avif",
             "gif",
             "jpeg",
+            "jpg",
             "png",
             "svg",
             "webp"
