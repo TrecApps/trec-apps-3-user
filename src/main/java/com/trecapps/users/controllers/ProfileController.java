@@ -1,6 +1,5 @@
 package com.trecapps.users.controllers;
 
-import com.azure.core.annotation.Get;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.pictures.models.PictureData;
 import com.trecapps.pictures.services.PictureManager;
