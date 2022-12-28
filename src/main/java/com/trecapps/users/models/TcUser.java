@@ -3,7 +3,7 @@ package com.trecapps.users.models;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.Email;
+import jakarta.validation.constraints.Email;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Set;

@@ -8,13 +8,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
 
 @EnableWebSecurity
 @Configuration
 @Order(1)
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig {
 
     @Autowired
     SecurityConfig(TrecAccountService trecAccountService1, TrecSecurityContext trecSecurityContext1)
@@ -38,15 +38,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/Brands/login"
     };
 
-    @Override
-    protected void configure(HttpSecurity security) throws Exception
+    @Bean
+    public SecurityFilterChain configure(HttpSecurity security) throws Exception
     {
-        security.csrf().disable()
-                .authorizeRequests()
-                .antMatchers(restrictedEndpoints)
+        security.csrf().disable().authorizeHttpRequests()
+
+                .requestMatchers(restrictedEndpoints)
                 .authenticated()
                 .and()
-                .authorizeRequests()
+                .authorizeHttpRequests()
                 .anyRequest()
                 .permitAll()
                 .and()
@@ -54,6 +54,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .securityContext().securityContextRepository(trecSecurityContext).and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 ;
+        return security.build();
     }
 
 

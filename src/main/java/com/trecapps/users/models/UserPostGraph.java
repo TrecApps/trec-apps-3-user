@@ -1,15 +1,11 @@
 package com.trecapps.users.models;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.stereotype.Component;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
 import java.util.List;
 
 @Component
