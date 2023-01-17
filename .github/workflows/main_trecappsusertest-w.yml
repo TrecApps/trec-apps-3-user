@@ -31,6 +31,7 @@ jobs:
           echo "${GRADLE_PROPS}" > ~/.gradle/gradle.properties
 
       - name: Build with Gradle
+        shell: bash
         run: gradle build
 
       - name: Upload artifact for deployment job
