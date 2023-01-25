@@ -91,6 +91,22 @@ public class BrandProfileController {
         return new ResponseEntity<>(extension, header, HttpStatus.OK);
     }
 
+    @GetMapping("/profilePic/{brandId}")
+    ResponseEntity<byte[]> getProfilePictureDirectly(@PathVariable("brandId")String brandId)
+    {
+        String type = pictureManager.getPicName(brandId);
+        if(type != null)
+        {
+            byte[] ret = pictureManager.getBrandProfilePic(brandId,type);
+            if(ret != null) {
+                MultiValueMap<String, String> header = new LinkedMultiValueMap<>();
+                header.add("Content-type", String.format("image/%s", type.toLowerCase(Locale.ROOT)));
+                return new ResponseEntity<>(ret, header, HttpStatus.OK);
+            }
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
     @GetMapping("/{userId}")
     ResponseEntity<PictureData> getProfile(@PathVariable("userId")String userId)
     {
