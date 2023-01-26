@@ -109,7 +109,7 @@ public class TcUser {
     String[] address;
 
     // External Profiles
-    Set<UUID> brands;
+    Set<String> brands;
     Map<UUID, UUID> brandSettings; // Device/App setting determining which Brand the User is currently id-ing as
 
     String restrictions; // Semicolon restricted details on the claims against this user

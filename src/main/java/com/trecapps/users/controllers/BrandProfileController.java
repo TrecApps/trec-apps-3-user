@@ -3,6 +3,7 @@ package com.trecapps.users.controllers;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.pictures.models.PictureData;
 import com.trecapps.pictures.services.PictureManager;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +18,7 @@ import java.util.Locale;
 
 @RequestMapping("/brandProfile")
 @RestController
+@Slf4j
 public class BrandProfileController {
     private static final List<String> imageTypes = Arrays.asList(
             "apng",
@@ -62,7 +64,7 @@ public class BrandProfileController {
 
 
         String[] results = pictureManager.setBrandProfile(brandId, trecAuth.getAccount().getId(), id).split("[:]");
-        return new ResponseEntity<>(results[1], HttpStatus.valueOf(results[0]));
+        return new ResponseEntity<>(results[1], HttpStatus.valueOf(Integer.parseInt(results[0])));
     }
 
     @GetMapping("/file/{fileName}")
@@ -94,9 +96,10 @@ public class BrandProfileController {
     @GetMapping("/profilePic/{brandId}")
     ResponseEntity<byte[]> getProfilePictureDirectly(@PathVariable("brandId")String brandId)
     {
-        String type = pictureManager.getPicName(brandId);
+        String type = pictureManager.getBrandProfilePicName(brandId);
         if(type != null)
         {
+            log.info("Found Brand Profile {} type to be {}", brandId, type);
             byte[] ret = pictureManager.getBrandProfilePic(brandId,type);
             if(ret != null) {
                 MultiValueMap<String, String> header = new LinkedMultiValueMap<>();

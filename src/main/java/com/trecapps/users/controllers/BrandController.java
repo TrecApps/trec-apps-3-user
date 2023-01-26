@@ -26,7 +26,7 @@ public class BrandController {
 
 
     @GetMapping("/{id}")
-    ResponseEntity<TcBrands> getBrand(@PathVariable("id") UUID uuid)
+    ResponseEntity<TcBrands> getBrand(@PathVariable("id") String uuid)
     {
         TcBrands brand = null;
         try {
@@ -54,11 +54,11 @@ public class BrandController {
 
         String[] parts = result.split("[:]");
 
-        return new ResponseEntity<>(parts[1], HttpStatus.valueOf(parts[0]));
+        return new ResponseEntity<>(parts[1], HttpStatus.valueOf(Integer.parseInt(parts[0])));
     }
 
     @PutMapping(value = "/NewOwner/{id}", consumes = MediaType.TEXT_PLAIN_VALUE)
-    ResponseEntity<Void> assignNewOwner(RequestEntity<String> userId, @PathVariable("id") UUID uuid)
+    ResponseEntity<Void> assignNewOwner(RequestEntity<String> userId, @PathVariable("id") String uuid)
     {
         boolean result = brandService.assignOwner(((TrecAuthentication)
             SecurityContextHolder.getContext().getAuthentication()).getAccount(), userId.getBody(), uuid);
@@ -67,7 +67,7 @@ public class BrandController {
     }
 
     @GetMapping(value = "/login/{id}")
-    ResponseEntity<LoginToken> loginAs(@PathVariable("id") UUID uuid, HttpServletRequest request)
+    ResponseEntity<LoginToken> loginAs(@PathVariable("id") String uuid, HttpServletRequest request)
     {
         TrecAuthentication trecAuth = (TrecAuthentication) SecurityContextHolder.getContext().getAuthentication();
         LoginToken ret = brandService.LoginAsBrand(
