@@ -31,11 +31,17 @@ public class SecurityConfig {
             "/Users/Current",
             "/Users/UserUpdate",
             "/Sessions/**",
-            "/Email/**",
+            "/Email/**"
+
+    };
+
+    String[] verifiedEndpoints = {
             "/Brands/list",
             "/Brands/New",
             "/Brands/NewOwner/**",
-            "/Brands/login"
+            "/Brands/login",
+            "/profile/**",
+            "/brandProfile/**"
     };
 
     @Bean
@@ -45,6 +51,10 @@ public class SecurityConfig {
 
                 .requestMatchers(restrictedEndpoints)
                 .authenticated()
+                .and()
+                .authorizeHttpRequests()
+                .requestMatchers(verifiedEndpoints)
+                .hasAuthority("EMAIL_VERIFIED")
                 .and()
                 .authorizeHttpRequests()
                 .anyRequest()
