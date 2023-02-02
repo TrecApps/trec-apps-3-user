@@ -40,7 +40,7 @@ dependencies {
     //Enable Trec-Auth
     implementation 'com.trecapps.auth:TrecAuth:0.0.39'
     implementation 'com.trecapps.pictures:trec-picture-manager:0.1.4'
-    implementation 'com.twilio.sdk:twilio:7.1.0'
+    implementation 'com.twilio.sdk:twilio:9.2.2'
 
     // Security Dependencies
     implementation 'org.springframework.boot:spring-boot-starter-security:3.0.0'
