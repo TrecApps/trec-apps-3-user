@@ -40,8 +40,8 @@ public class SecurityConfig {
             "/Brands/New",
             "/Brands/NewOwner/**",
             "/Brands/login",
-            "/profile/**",
-            "/brandProfile/**"
+            "/profile/set/**",
+            "/brandProfile/set/**"
     };
 
     @Bean

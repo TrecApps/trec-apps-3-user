@@ -306,3 +306,47 @@ No connection string provided
 Action:
 Please provide connection string.
 
+2023-02-04 11:32:17.932-06:00 ERROR c.m.applicationinsights.agent - 
+*************************
+Application Insights Java Agent 3.4.3 startup failed (PID 16612)
+*************************
+
+Description:
+No connection string provided
+
+Action:
+Please provide connection string.
+
+2023-02-04 11:38:56.384-06:00 ERROR c.m.applicationinsights.agent - 
+*************************
+Application Insights Java Agent 3.4.3 startup failed (PID 6740)
+*************************
+
+Description:
+No connection string provided
+
+Action:
+Please provide connection string.
+
+2023-02-04 11:41:02.665-06:00 ERROR c.m.applicationinsights.agent - 
+*************************
+Application Insights Java Agent 3.4.3 startup failed (PID 16576)
+*************************
+
+Description:
+No connection string provided
+
+Action:
+Please provide connection string.
+
+2023-02-04 11:52:22.276-06:00 ERROR c.m.applicationinsights.agent - 
+*************************
+Application Insights Java Agent 3.4.3 startup failed (PID 17332)
+*************************
+
+Description:
+No connection string provided
+
+Action:
+Please provide connection string.
+
