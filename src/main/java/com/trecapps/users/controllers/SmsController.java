@@ -46,6 +46,7 @@ public class SmsController {
         TrecAuthentication auth = (TrecAuthentication) SecurityContextHolder.getContext().getAuthentication();
         try
         {
+            log.info("Attempting to Validate Phone!");
             return new ResponseEntity(trecSmsService.validatePhone(auth.getAccount(), code)
                     ? HttpStatus.NO_CONTENT : HttpStatus.BAD_REQUEST);
         }catch (JsonProcessingException e) {

@@ -8,10 +8,12 @@ import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.TreeMap;
 
+@Slf4j
 public class TrecSmsService {
 
     String account;
@@ -30,19 +32,22 @@ public class TrecSmsService {
         token = token1;
         number = number1;
 
+        log.info("Account: {}, Token: {}, number: {}", account, token, number);
+
         userStorageService = userStorageService1;
         stateService = stateService1;
 
-        Twilio.init(account, token);
+
     }
 
     public boolean validatePhone(TrecAccount account, @NotNull String enteredCode) throws JsonProcessingException {
         TcUser user = userStorageService.retrieveUser(account.getId());
 
         Map<String, String> codes = user.getVerificationCodes();
-        if(codes == null || codes.containsKey("SMS"))
+        if(codes == null || !codes.containsKey("SMS")) {
+            log.info("SMS Code has not been set up!");
             return false;
-
+        }
         // To-Do: Add Expiration Map in future build of TrecAuth and use here
         if(enteredCode.equals(codes.get("SMS")))
         {
@@ -50,6 +55,7 @@ public class TrecSmsService {
             userStorageService.saveUser(user);
             return true;
         }
+        log.info("Codes {} and {} do not match!", enteredCode, codes.get("SMS"));
         return false;
     }
 
@@ -67,10 +73,13 @@ public class TrecSmsService {
 
         userStorageService.saveUser(user);
 
-        sendCode(code, user.getMobilePhone());
+        log.info("Sending message to {}", user.getMobilePhone().toString());
+
+        sendCode(code, user.getMobilePhone().toString());
     }
 
     public void sendCode(String code, String phone){
+        Twilio.init(account, token);
         Message message = Message.creator(
                 new PhoneNumber(phone),
                 new PhoneNumber(number),

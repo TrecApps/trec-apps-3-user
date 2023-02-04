@@ -161,6 +161,7 @@ public class UserController {
             return new ResponseEntity<>(TcUser.getUserFromAuthUser(user), HttpStatus.OK);
         } catch(NullPointerException e)
         {
+            logger.error("Null Pointer Exception Detected! ",e);
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         catch(JsonProcessingException e)

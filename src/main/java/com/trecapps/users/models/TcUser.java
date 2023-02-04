@@ -1,5 +1,6 @@
 package com.trecapps.users.models;
 
+import com.trecapps.auth.models.PhoneNumber;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -49,7 +50,11 @@ public class TcUser {
         ret.setEmail(email);
         ret.setEmailVerified(emailVerified);
         ret.setId(id);
-        ret.setMobilePhone(mobilePhone);
+        if(mobilePhone != null) {
+            var num = new PhoneNumber();
+            num.setNumber(mobilePhone);
+            ret.setMobilePhone(num);
+        }
         ret.setPhoneVerified(phoneVerified);
         ret.setProfilePic(profilePic);
         ret.setRestrictions(restrictions);
@@ -73,7 +78,9 @@ public class TcUser {
         ret.setEmail(user.getEmail());
         ret.setEmailVerified(user.isEmailVerified());
         ret.setId(user.getId());
-        ret.setMobilePhone(user.getMobilePhone());
+        var phone = user.getMobilePhone();
+        if(phone != null)
+            ret.setMobilePhone(phone.getNumber());
         ret.setPhoneVerified(user.isPhoneVerified());
         ret.setProfilePic(user.getProfilePic());
         ret.setRestrictions(user.getRestrictions());
@@ -89,7 +96,7 @@ public class TcUser {
     String userProfile;
 
     // Phone Used by the User
-    String mobilePhone;
+    Long mobilePhone;
     boolean phoneVerified;
 
     // External Email used by the User

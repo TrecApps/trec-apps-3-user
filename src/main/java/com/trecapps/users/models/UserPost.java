@@ -34,7 +34,7 @@ public class UserPost {
     PasswordProfile passwordProfile;
 
     @NotNull
-    String mobilePhone;
+    Long mobilePhone;
     @JsonProperty(required = true)
     OffsetDateTime birthday;
 
@@ -45,6 +45,6 @@ public class UserPost {
 
     public UserPostGraph GetGraphObject()
     {
-        return new UserPostGraph(accountEnabled, displayName, mailNickname, userPrincipalName, passwordProfile, mobilePhone, mail, otherMails == null ? new ArrayList<>(): otherMails);
+        return new UserPostGraph(accountEnabled, displayName, mailNickname, userPrincipalName, passwordProfile, mobilePhone.toString(), mail, otherMails == null ? new ArrayList<>(): otherMails);
     }
 }
