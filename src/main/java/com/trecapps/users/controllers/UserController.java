@@ -95,14 +95,13 @@ public class UserController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 
 
-        LoginToken ret = new LoginToken();
-        ret.setToken_type("User");
-        ret.setAccess_token(userToken.getToken());
-        ret.setRefresh_token(refreshToken);
+        token.setToken_type("User");
+        token.setAccess_token(userToken.getToken());
+        token.setRefresh_token(refreshToken);
 
         OffsetDateTime exp = userToken.getExpiration();
         if(exp != null)
-            ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
+            token.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         TrecAuthentication tAuth = new TrecAuthentication(newAccount);
 
