@@ -13,18 +13,8 @@ import java.nio.CharBuffer;
 @NoArgsConstructor
 @Getter
 @Setter
-public class PasswordChange implements AutoCloseable{
+public class PasswordChange {
 
-    CharBuffer currentPassword,newPassword;
+    String currentPassword,newPassword;
 
-    public void close()
-    {
-        if(currentPassword != null)
-            for(int rust = 0; rust < currentPassword.length();rust++)
-                currentPassword.put(rust, '\0');
-
-        if(newPassword != null)
-            for(int rust = 0; rust < newPassword.length();rust++)
-                newPassword.put(rust, '\0');
-    }
 }

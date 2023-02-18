@@ -177,8 +177,8 @@ public class UserController {
         ;
         boolean result = userService.changePassword(
                 ((TrecAuthentication)SecurityContextHolder.getContext().getAuthentication()).getAccount(),
-                change.getCurrentPassword().toString(),
-                change.getNewPassword().toString());
+                change.getCurrentPassword(),
+                change.getNewPassword());
 
         return new ResponseEntity<>(result ? "Success" : "Failed!", result ? HttpStatus.OK :HttpStatus.UNAUTHORIZED);
     }
