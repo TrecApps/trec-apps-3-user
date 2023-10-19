@@ -40,6 +40,10 @@ public class TrecSmsService {
 
     }
 
+    public boolean hasBeenSetUp(){
+        return account != null && token != null && number != null;
+    }
+
     public boolean validatePhone(TrecAccount account, @NotNull String enteredCode) throws JsonProcessingException {
         TcUser user = userStorageService.retrieveUser(account.getId());
 

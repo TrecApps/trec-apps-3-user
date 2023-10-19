@@ -54,7 +54,7 @@ public class SecurityConfig {
                 .and()
                 .authorizeHttpRequests()
                 .requestMatchers(verifiedEndpoints)
-                .hasAuthority("EMAIL_VERIFIED")
+                .hasAuthority("PHONE_VERIFIED")
                 .and()
                 .authorizeHttpRequests()
                 .anyRequest()

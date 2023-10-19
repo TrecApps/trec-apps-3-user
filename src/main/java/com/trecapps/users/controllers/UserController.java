@@ -12,6 +12,7 @@ import com.trecapps.auth.services.UserStorageService;
 import com.trecapps.users.models.PasswordChange;
 import com.trecapps.users.models.TcUser;
 import com.trecapps.users.models.UserPost;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,7 @@ import java.time.OffsetDateTime;
 
 @RestController
 @RequestMapping("/Users")
-public class UserController {
+public class UserController extends CookieControllerBase{
 
     TrecAccountService userService;
 
@@ -45,8 +46,12 @@ public class UserController {
     public UserController(@Value("${tenant.url}")String url,
             @Autowired TrecAccountService userService,
             @Autowired UserStorageService userStorageService1,
-            @Autowired JwtTokenService jwtTokenService1)
+            @Autowired JwtTokenService jwtTokenService1,
+            @Value("${trecauth.refresh.app:TREC_APPS_REFRESH}") String refreshCookie1,
+            @Value("${trecauth.refresh.domain:#{NULL}}") String domain1,
+            @Value("${trecauth.refresh.on_local:false}") boolean onLocal1)
     {
+        super(refreshCookie1, domain1, onLocal1);
         this.userService = userService;
         this.url = url;
         this.userStorageService = userStorageService1;
@@ -57,7 +62,10 @@ public class UserController {
     Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @PostMapping("/createUser")
-    public ResponseEntity createNewUser(RequestEntity<UserPost> post, HttpServletRequest request)
+    public ResponseEntity createNewUser(
+            RequestEntity<UserPost> post,
+            HttpServletRequest request,
+            HttpServletResponse response)
     {
         logger.info("Creating New User!");
         UserPost postBody = post.getBody();
@@ -111,6 +119,8 @@ public class UserController {
         tAuth.setSessionId(sessionId);
         context.setAuthentication(tAuth);
         SecurityContextHolder.setContext(context);
+
+        this.SetCookie(response, refreshToken);
 
         return new ResponseEntity(token, HttpStatus.OK);
     }

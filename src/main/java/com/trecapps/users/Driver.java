@@ -18,7 +18,7 @@ import org.springframework.context.annotation.ComponentScan;
 public class Driver {
     public static void main(String[] args)
     {
-        ApplicationInsights.attach();
+        //ApplicationInsights.attach();
         SpringApplication.run(Driver.class, args);
     }
 }

@@ -23,7 +23,7 @@ public class SmsController {
     @GetMapping
     public ResponseEntity sendVerificationText()
     {
-        if(trecSmsService == null)
+        if(trecSmsService == null || !trecSmsService.hasBeenSetUp())
             return new ResponseEntity(HttpStatus.NOT_IMPLEMENTED);
         TrecAuthentication auth = (TrecAuthentication) SecurityContextHolder.getContext().getAuthentication();
         try{

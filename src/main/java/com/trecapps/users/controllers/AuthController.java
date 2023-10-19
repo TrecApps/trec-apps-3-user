@@ -10,6 +10,7 @@ import com.trecapps.auth.services.TrecAccountService;
 import com.trecapps.users.models.Login;
 import com.trecapps.users.models.TokenRequest;
 import com.trecapps.users.services.StateService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ import java.time.OffsetDateTime;
 
 @RestController
 @RequestMapping("/Auth")
-public class AuthController {
+public class AuthController extends CookieControllerBase{
 
     @Autowired
     TrecAccountService authService;
@@ -47,6 +48,12 @@ public class AuthController {
 
     Logger logger = LoggerFactory.getLogger(AuthController.class);
 
+    public AuthController(@Value("${trecauth.refresh.app:TREC_APPS_REFRESH}") String refreshCookie1,
+                          @Value("${trecauth.refresh.domain:#{NULL}}") String domain1,
+                          @Value("${trecauth.refresh.on_local:false}") boolean onLocal1) {
+        super(refreshCookie1, domain1, onLocal1);
+    }
+
     private ResponseEntity<LoginToken> generateResponse(LoginToken token)
     {
         if(token.getAccess_token() == null || token.getAccess_token().length() == 0)
@@ -55,7 +62,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginToken> login(@RequestBody Login login, HttpServletRequest request)
+    public ResponseEntity<LoginToken> login(@RequestBody Login login, HttpServletRequest request, HttpServletResponse response)
     {
         TrecAccount account = authService.logInUsername(login.getUsername(), login.getPassword());
 
@@ -89,6 +96,8 @@ public class AuthController {
         tAuth.setLoginToken(ret);
         secContext.setAuthentication(tAuth);
         SecurityContextHolder.setContext(secContext);
+        this.SetCookie(response, refreshToken);
+
         return new ResponseEntity<>(ret, HttpStatus.OK);
     }
 
@@ -102,13 +111,15 @@ public class AuthController {
 
 
     @GetMapping("/logout")
-    public ResponseEntity logout()
+    public ResponseEntity logout(HttpServletRequest req, HttpServletResponse resp)
     {
         TrecAuthentication trecAuth = (TrecAuthentication) SecurityContextHolder.getContext().getAuthentication();
 
         String sessionId = trecAuth.getSessionId();
 
         boolean result = sessionManager.removeSession(trecAuth.getAccount().getId(), sessionId);
+
+        this.RemoveCookie(req, resp);
 
         return result ? new ResponseEntity(HttpStatus.NO_CONTENT) :
                 new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
