@@ -2,6 +2,7 @@ package com.trecapps.users.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.LoginToken;
+import com.trecapps.auth.models.TcUser;
 import com.trecapps.auth.models.TokenTime;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
@@ -10,7 +11,6 @@ import com.trecapps.auth.services.SessionManager;
 import com.trecapps.auth.services.TrecAccountService;
 import com.trecapps.auth.services.UserStorageService;
 import com.trecapps.users.models.PasswordChange;
-import com.trecapps.users.models.TcUser;
 import com.trecapps.users.models.UserPost;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -89,7 +89,9 @@ public class UserController extends CookieControllerBase{
             return new ResponseEntity("Account Exists", HttpStatus.BAD_REQUEST);
         }
 
-        userStorageService.saveUser(new TcUser(postBody, newAccount.getId()).getAuthUser());
+        TcUser user = postBody.GetTcUserObject();
+        user.setId(newAccount.getId());
+        userStorageService.saveUser(user);
 
 
 
@@ -151,7 +153,7 @@ public class UserController extends CookieControllerBase{
 
             // End To-Do, here, assume all checks re valid
 
-            userStorageService.saveUser(user.getAuthUser());
+            userStorageService.saveUser(user);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -165,9 +167,9 @@ public class UserController extends CookieControllerBase{
         logger.info("Retrieving User");
 
         try {
-            com.trecapps.auth.models.TcUser user = userStorageService.retrieveUser(((TrecAuthentication) SecurityContextHolder.getContext().getAuthentication()).getAccount().getId());
+            TcUser user = userStorageService.retrieveUser(((TrecAuthentication) SecurityContextHolder.getContext().getAuthentication()).getAccount().getId());
 
-            return new ResponseEntity<>(TcUser.getUserFromAuthUser(user), HttpStatus.OK);
+            return new ResponseEntity<>(user, HttpStatus.OK);
         } catch(NullPointerException e)
         {
             logger.error("Null Pointer Exception Detected! ",e);
