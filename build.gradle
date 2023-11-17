@@ -11,6 +11,9 @@ apply plugin: 'jacoco'
 group 'com.trecapps.users'
 version '0.0.1'
 
+targetCompatibility = 17
+sourceCompatibility = 17
+
 repositories {
     mavenCentral()
 
@@ -38,8 +41,7 @@ dependencies {
     // Enable Branding
     implementation 'com.trecapps.base:InfoResource:0.1.9'
     //Enable Trec-Auth
-    implementation 'com.trecapps.auth:TrecAuth:0.0.48'
-    implementation 'com.trecapps.pictures:trec-picture-manager:0.1.4'
+    implementation 'com.trecapps.auth:TrecAuth:0.0.50'
     implementation 'com.twilio.sdk:twilio:9.2.2'
 
     // Security Dependencies
