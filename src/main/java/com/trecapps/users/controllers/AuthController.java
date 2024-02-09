@@ -17,12 +17,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @RestController
@@ -59,6 +63,18 @@ public class AuthController extends CookieControllerBase{
         if(token.getAccess_token() == null || token.getAccess_token().length() == 0)
             return new ResponseEntity<LoginToken>(token, HttpStatus.UNAUTHORIZED);
         return new ResponseEntity<LoginToken>(token, HttpStatus.OK);
+    }
+
+    @GetMapping("/permissions")
+    public List<String> permissions(Authentication authentication)
+    {
+        TrecAuthentication trecAuthentication = (TrecAuthentication) authentication;
+
+        List<String> ret = new ArrayList<>();
+        for(GrantedAuthority ga :trecAuthentication.getAuthorities()) {
+            ret.add(ga.getAuthority());
+        }
+        return ret;
     }
 
     @PostMapping("/login")

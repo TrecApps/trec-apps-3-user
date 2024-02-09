@@ -31,7 +31,8 @@ public class SecurityConfig {
             "/Users/Current",
             "/Users/UserUpdate",
             "/Sessions/**",
-            "/Email/**"
+            "/Email/**",
+            "/Auth/permissions"
 
     };
 
@@ -54,7 +55,7 @@ public class SecurityConfig {
                 .and()
                 .authorizeHttpRequests()
                 .requestMatchers(verifiedEndpoints)
-                .hasAuthority("PHONE_VERIFIED")
+                .hasAuthority("TREC_VERIFIED")
                 .and()
                 .authorizeHttpRequests()
                 .anyRequest()
