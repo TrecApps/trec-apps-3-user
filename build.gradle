@@ -41,7 +41,7 @@ dependencies {
     // Enable Branding
     implementation 'com.trecapps.base:InfoResource:0.1.9'
     //Enable Trec-Auth
-    implementation 'com.trecapps.auth:TrecAuth:0.0.50'
+    implementation 'com.trecapps.auth:TrecAuth:0.0.52'
     implementation 'com.twilio.sdk:twilio:9.2.2'
 
     // Security Dependencies
@@ -50,7 +50,7 @@ dependencies {
 
 
     // Azure Logging
-    implementation "com.microsoft.azure:applicationinsights-runtime-attach:3.4.3"
+    implementation "com.microsoft.azure:applicationinsights-runtime-attach:3.4.19"
 
     implementation 'com.azure:azure-storage-blob:+'
 
