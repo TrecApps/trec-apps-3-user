@@ -12,7 +12,6 @@ on:
 env:
   WEBAPP: trecappsusertest
   TEST_GROUP: TrecApps-Test
-  BASE_GROUP: TrecApps-Base
   ACCOUNT: tcartifactlauncher
   CONTAINER: tc-user-tools
   EXPIRY_TIME: 10 minutes
@@ -79,13 +78,9 @@ jobs:
         with:
           inlineScript: | 
             az extension add --name webapp
-            echo "Added Extension"
             az storage container create -n $CONTAINER --account-name $ACCOUNT
-            echo "Created Container"
             az storage blob upload      -f app.zip --account-name $ACCOUNT -c $CONTAINER -n $ACCOUNT 
-            echo "Blob Upload Step Completed"
             ZIP_URL=$(az storage blob generate-sas --full-uri --permissions r --expiry ${{ env.expiry }} --account-name $ACCOUNT -c $CONTAINER -n $ACCOUNT | xargs)
-            echo "ZIP_URL Created"
             az webapp deploy --name $WEBAPP --resource-group $TEST_GROUP --type zip --src-url  $ZIP_URL --async false
             echo "Deployment Completed"
             az storage container delete -n $CONTAINER --account-name $ACCOUNT
