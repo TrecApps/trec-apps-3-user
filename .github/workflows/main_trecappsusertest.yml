@@ -77,7 +77,6 @@ jobs:
       - name: Azure CLI script
         uses: azure/CLI@v1
         with:
-          azcliversion: 2.30.1
           inlineScript: | 
             az extension add --name webapp
             echo "Added Extension"
