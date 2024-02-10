@@ -11,7 +11,7 @@ on:
 
 env:
   WEBAPP: trecappsusertest
-  TEST_GROUP: TrecApps-Test
+  TEST_GROUP: TrecApps-Test-User
   ACCOUNT: tcartifactlauncher
   CONTAINER: tc-user-tools
   EXPIRY_TIME: 10 minutes
