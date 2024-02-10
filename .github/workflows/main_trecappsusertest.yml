@@ -80,11 +80,11 @@ jobs:
           inlineScript: | 
             az extension add --name webapp
             echo "Added Extension"
-            az storage container create -n $CONTAINER --account-name $ACCOUNT --resource-group $BASE_GROUP
+            az storage container create -n $CONTAINER --account-name $ACCOUNT
             echo "Created Container"
-            az storage blob upload      -f app.zip --resource-group $BASE_GROUP   --account-name $ACCOUNT -c $CONTAINER -n $ACCOUNT 
+            az storage blob upload      -f app.zip --account-name $ACCOUNT -c $CONTAINER -n $ACCOUNT 
             echo "Blob Upload Step Completed"
-            ZIP_URL=$(az storage blob generate-sas --full-uri --permissions r --expiry ${{ env.expiry }} --resource-group $BASE_GROUP --account-name $ACCOUNT -c $CONTAINER -n $ACCOUNT | xargs)
+            ZIP_URL=$(az storage blob generate-sas --full-uri --permissions r --expiry ${{ env.expiry }} --account-name $ACCOUNT -c $CONTAINER -n $ACCOUNT | xargs)
             echo "ZIP_URL Created"
             az webapp deploy --name $WEBAPP --resource-group $TEST_GROUP --type zip --src-url  $ZIP_URL --async false
             echo "Deployment Completed"
