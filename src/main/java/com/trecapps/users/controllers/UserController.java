@@ -41,9 +41,8 @@ public class UserController extends CookieControllerBase{
 
     JwtTokenService jwtTokenService;
 
-    String url;
 
-    public UserController(@Value("${tenant.url}")String url,
+    public UserController(
             @Autowired TrecAccountService userService,
             @Autowired UserStorageService userStorageService1,
             @Autowired JwtTokenService jwtTokenService1,
@@ -53,7 +52,6 @@ public class UserController extends CookieControllerBase{
     {
         super(refreshCookie1, domain1, onLocal1);
         this.userService = userService;
-        this.url = url;
         this.userStorageService = userStorageService1;
         this.jwtTokenService = jwtTokenService1;
     }
