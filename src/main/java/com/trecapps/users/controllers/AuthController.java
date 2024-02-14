@@ -39,16 +39,11 @@ public class AuthController extends CookieControllerBase{
     @Autowired
     JwtTokenService jwtTokenService;
 
-    @Autowired
-    StateService stateService;
 
     @Autowired
     SessionManager sessionManager;
 
-    @Value("${base.url}")
-    String baseUrl;
 
-    @Value("${tenant.url}")String url;
 
     Logger logger = LoggerFactory.getLogger(AuthController.class);
 
