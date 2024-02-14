@@ -67,7 +67,7 @@ jobs:
       - name: Zip the app contents
         uses: papeloto/action-zip@v1
         with:
-          files: app.jar
+          files: User-0.0.1.jar
           dest: app.zip
 
       - name: Set SAS token expiration
