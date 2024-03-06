@@ -25,8 +25,11 @@ public class EmailController {
         TrecAuthentication auth = (TrecAuthentication) SecurityContextHolder.getContext().getAuthentication();
 
         try {
-            emailService.sendValidationEmail(auth.getAccount());
-            return new ResponseEntity(HttpStatus.NO_CONTENT);
+            if(emailService.sendValidationEmail(auth.getAccount()))
+                return new ResponseEntity(HttpStatus.NO_CONTENT);
+            else {
+                return new ResponseEntity(HttpStatus.ACCEPTED);
+            }
         } catch (JsonProcessingException | MessagingException e) {
             e.printStackTrace();
             return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);

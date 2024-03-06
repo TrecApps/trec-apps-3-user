@@ -7,10 +7,13 @@ import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.services.JwtTokenService;
 import com.trecapps.auth.services.SessionManager;
 import com.trecapps.auth.services.TrecAccountService;
+import com.trecapps.auth.services.UserStorageService;
 import com.trecapps.users.models.Login;
 import com.trecapps.users.models.TokenRequest;
+import com.trecapps.users.models.UserInfo;
 import com.trecapps.users.services.StateService;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +30,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 
 @RestController
@@ -42,6 +46,9 @@ public class AuthController extends CookieControllerBase{
 
     @Autowired
     SessionManager sessionManager;
+
+    @Autowired
+    UserStorageService userStorageService;
 
 
 
@@ -135,5 +142,25 @@ public class AuthController extends CookieControllerBase{
         return result ? new ResponseEntity(HttpStatus.NO_CONTENT) :
                 new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @SneakyThrows
+    @GetMapping("/User")
+    ResponseEntity<UserInfo> getUserInfo(Authentication authentication)
+    {
+        TrecAuthentication authentication1 = (TrecAuthentication) authentication;
+        TrecAccount account = authentication1.getAccount();
+
+        UUID brandUuid = authentication1.getBrandId();
+
+        String brandId = brandUuid == null ? null : brandUuid.toString();
+
+        UserInfo ret = new UserInfo();
+        ret.setUser(userStorageService.retrieveUser(account.getId()));
+        if(brandId != null)
+            ret.setBrand(userStorageService.retrieveBrand(brandId));
+
+        return new ResponseEntity<>(ret, HttpStatus.OK);
+    }
+
 
 }

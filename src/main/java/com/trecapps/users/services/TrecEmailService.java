@@ -38,8 +38,19 @@ public class TrecEmailService
 		return false;
 	}
 
-	public void sendValidationEmail(TrecAccount account) throws JsonProcessingException, MessagingException {
+	boolean isPast1(TcUser user){
+		OffsetDateTime exp = user.getCodeExpiration();
+		if(exp == null)
+			return false;
+
+		return OffsetDateTime.now().isBefore(exp.minusMinutes(9));
+	}
+
+	public boolean sendValidationEmail(TrecAccount account) throws JsonProcessingException, MessagingException {
 		TcUser user = userStorageService.retrieveUser(account.getId());
+
+		if(isPast1(user))
+			return false;
 
 		String code = stateService.generateState();
 
@@ -52,6 +63,8 @@ public class TrecEmailService
 		userStorageService.saveUser(user);
 
 		sendValidationEmail(user.getEmail(), "Trec-Account: Email Validation", code);
+
+		return true;
 	}
 	
 	void sendValidationEmail(String to,
