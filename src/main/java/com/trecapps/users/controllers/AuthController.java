@@ -63,6 +63,8 @@ public class AuthController extends CookieControllerBase{
         this.authService = trecAccountService1;
         this.userStorageService = userStorageService1;
         this.sessionManager = sessionManager1;
+
+        logger.info("CookieBase Provided is {}", cookieBase != null);
     }
 
     private ResponseEntity<LoginToken> generateResponse(LoginToken token)
