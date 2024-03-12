@@ -1,6 +1,7 @@
 package com.trecapps.users.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.trecapps.auth.controllers.CookieBase;
 import com.trecapps.auth.models.LoginToken;
 import com.trecapps.auth.models.TcUser;
 import com.trecapps.auth.models.TokenTime;
@@ -39,21 +40,17 @@ public class UserController extends CookieControllerBase{
 
     UserStorageService userStorageService;
 
-    JwtTokenService jwtTokenService;
 
 
     public UserController(
+            @Autowired(required = false) CookieBase cookieBase,
             @Autowired TrecAccountService userService,
             @Autowired UserStorageService userStorageService1,
-            @Autowired JwtTokenService jwtTokenService1,
-            @Value("${trecauth.refresh.app:TREC_APPS_REFRESH}") String refreshCookie1,
-            @Value("${trecauth.refresh.domain:#{NULL}}") String domain1,
-            @Value("${trecauth.refresh.on_local:false}") boolean onLocal1)
+            @Autowired JwtTokenService jwtTokenService1)
     {
-        super(refreshCookie1, domain1, onLocal1);
+        super(cookieBase, jwtTokenService1);
         this.userService = userService;
         this.userStorageService = userStorageService1;
-        this.jwtTokenService = jwtTokenService1;
     }
 
 
@@ -97,7 +94,7 @@ public class UserController extends CookieControllerBase{
         //sessionM
 
         TokenTime userToken = jwtTokenService.generateToken(newAccount, request.getHeader("User-Agent"), null, false);
-        String refreshToken = jwtTokenService.generateRefreshToken(newAccount, null, userToken.getSession());
+        //String refreshToken = jwtTokenService.generateRefreshToken(newAccount, null, userToken.getSession());
 
         if(userToken == null)
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -105,7 +102,7 @@ public class UserController extends CookieControllerBase{
 
         token.setToken_type("User");
         token.setAccess_token(userToken.getToken());
-        token.setRefresh_token(refreshToken);
+        //token.setRefresh_token(refreshToken);
 
         OffsetDateTime exp = userToken.getExpiration();
         if(exp != null)
@@ -120,7 +117,8 @@ public class UserController extends CookieControllerBase{
         context.setAuthentication(tAuth);
         SecurityContextHolder.setContext(context);
 
-        this.SetCookie(response, refreshToken);
+        if(cookieBase != null)
+            applyCookie(tAuth, token, userToken, response);
 
         return new ResponseEntity(token, HttpStatus.OK);
     }

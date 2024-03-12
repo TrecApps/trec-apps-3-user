@@ -1,41 +1,53 @@
 package com.trecapps.users.controllers;
 
+import com.trecapps.auth.controllers.CookieBase;
+import com.trecapps.auth.models.LoginToken;
+import com.trecapps.auth.models.TokenTime;
+import com.trecapps.auth.models.TrecAuthentication;
+import com.trecapps.auth.services.JwtTokenService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class CookieControllerBase {
 
     Logger logger = LoggerFactory.getLogger(CookieControllerBase.class);
 
-    String refreshCookie;
-    String domain;
-    boolean onLocal;
+    CookieBase cookieBase;
+    JwtTokenService jwtTokenService;
 
-    public CookieControllerBase(
-            @Value("${trecauth.refresh.app:TREC_APPS_REFRESH}") String refreshCookie1,
-            @Value("${trecauth.refresh.domain:#{NULL}}") String domain1,
-            @Value("${trecauth.refresh.on_local:false}") boolean onLocal1){
-        refreshCookie = refreshCookie1;
-        domain = domain1;
-        onLocal = onLocal1;
+    CookieControllerBase(CookieBase cb, JwtTokenService jwtTokenService1)
+    {
+        cookieBase = cb;
+        jwtTokenService = jwtTokenService1;
+    }
+
+
+    void applyCookie(TrecAuthentication trecAuthentication, LoginToken token, TokenTime time, HttpServletResponse response){
+        Map<String, String> apps= trecAuthentication.getClaims();
+
+        apps.put("app_" + cookieBase.getCookieAppName(), time.getSession());
+
+        String refreshToken = jwtTokenService.generateRefreshToken(trecAuthentication.getAccount(), apps);
+        token.setRefresh_token(refreshToken);
+
+        this.SetCookie(response, refreshToken);
+
     }
 
     void SetCookie(HttpServletResponse response, String refreshToken){
-        Cookie cook = new Cookie(refreshCookie, refreshToken);
+        Cookie cook = new Cookie(cookieBase.getCookieName(), refreshToken);
         cook.setHttpOnly(true);
         cook.setPath("/");
-        if(domain != null) {
-            logger.info("Setting Cookie domain to {}", domain);
-            cook.setDomain(domain);
-        }
-        if(!onLocal)
-            cook.setSecure(true);
+        cook.setDomain(cookieBase.getDomain());
+        cook.setSecure(true);
 
         cook.setMaxAge((int)TimeUnit.DAYS.toSeconds(7));
 
@@ -45,7 +57,7 @@ public class CookieControllerBase {
     void RemoveCookie(HttpServletRequest request, HttpServletResponse response){
         for(Cookie cook : request.getCookies())
         {
-            if(cook.getName().equals(refreshCookie))
+            if(cook.getName().equals(cookieBase.getCookieName()))
             {
                 cook.setValue("");
                 cook.setPath("/");

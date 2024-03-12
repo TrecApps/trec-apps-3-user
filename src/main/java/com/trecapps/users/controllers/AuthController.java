@@ -1,5 +1,6 @@
 package com.trecapps.users.controllers;
 
+import com.trecapps.auth.controllers.CookieBase;
 import com.trecapps.auth.models.LoginToken;
 import com.trecapps.auth.models.TokenTime;
 import com.trecapps.auth.models.TrecAuthentication;
@@ -30,6 +31,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -37,27 +39,30 @@ import java.util.UUID;
 @RequestMapping("/Auth")
 public class AuthController extends CookieControllerBase{
 
-    @Autowired
     TrecAccountService authService;
 
-    @Autowired
-    JwtTokenService jwtTokenService;
 
 
-    @Autowired
+
     SessionManager sessionManager;
 
-    @Autowired
     UserStorageService userStorageService;
+
+
 
 
 
     Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-    public AuthController(@Value("${trecauth.refresh.app:TREC_APPS_REFRESH}") String refreshCookie1,
-                          @Value("${trecauth.refresh.domain:#{NULL}}") String domain1,
-                          @Value("${trecauth.refresh.on_local:false}") boolean onLocal1) {
-        super(refreshCookie1, domain1, onLocal1);
+    public AuthController(@Autowired(required = false) CookieBase cookieBase,
+                          @Autowired JwtTokenService jwtTokenService,
+                          @Autowired UserStorageService userStorageService1,
+                          @Autowired SessionManager sessionManager1,
+                          @Autowired TrecAccountService trecAccountService1) {
+        super(cookieBase, jwtTokenService);
+        this.authService = trecAccountService1;
+        this.userStorageService = userStorageService1;
+        this.sessionManager = sessionManager1;
     }
 
     private ResponseEntity<LoginToken> generateResponse(LoginToken token)
@@ -91,7 +96,6 @@ public class AuthController extends CookieControllerBase{
         if(account.getId() == null)
             return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
         TokenTime userToken = jwtTokenService.generateToken(account, request.getHeader("User-Agent"), null, !Boolean.TRUE.equals(login.getStayLoggedIn()));
-        String refreshToken = jwtTokenService.generateRefreshToken(account, null, userToken.getSession());
 
         if(userToken == null)
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -100,7 +104,6 @@ public class AuthController extends CookieControllerBase{
         LoginToken ret = new LoginToken();
         ret.setToken_type("User");
         ret.setAccess_token(userToken.getToken());
-        ret.setRefresh_token(refreshToken);
 
         OffsetDateTime exp = userToken.getExpiration();
         if(exp != null)
@@ -114,7 +117,9 @@ public class AuthController extends CookieControllerBase{
         tAuth.setLoginToken(ret);
         secContext.setAuthentication(tAuth);
         SecurityContextHolder.setContext(secContext);
-        this.SetCookie(response, refreshToken);
+
+        if(cookieBase != null)
+            applyCookie(tAuth, ret, userToken, response);
 
         return new ResponseEntity<>(ret, HttpStatus.OK);
     }
@@ -137,11 +142,14 @@ public class AuthController extends CookieControllerBase{
 
         boolean result = sessionManager.removeSession(trecAuth.getAccount().getId(), sessionId);
 
-        this.RemoveCookie(req, resp);
+        if(cookieBase != null)
+            cookieBase.RemoveCookie(req, resp, trecAuth.getAccount().getId());
 
         return result ? new ResponseEntity(HttpStatus.NO_CONTENT) :
                 new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+
 
     @SneakyThrows
     @GetMapping("/User")
