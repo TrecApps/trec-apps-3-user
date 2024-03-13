@@ -121,7 +121,7 @@ public class AuthController extends CookieControllerBase{
         SecurityContextHolder.setContext(secContext);
 
         if(cookieBase != null)
-            applyCookie(tAuth, ret, userToken, response);
+            applyCookie(tAuth, ret, response);
 
         return new ResponseEntity<>(ret, HttpStatus.OK);
     }

@@ -30,12 +30,9 @@ public class CookieControllerBase {
     }
 
 
-    void applyCookie(TrecAuthentication trecAuthentication, LoginToken token, TokenTime time, HttpServletResponse response){
-        Map<String, String> apps= trecAuthentication.getClaims();
+    void applyCookie(TrecAuthentication trecAuthentication, LoginToken token, HttpServletResponse response){
 
-        apps.put("app_" + cookieBase.getCookieAppName(), time.getSession());
-
-        String refreshToken = jwtTokenService.generateRefreshToken(trecAuthentication.getAccount(), apps);
+        String refreshToken = jwtTokenService.generateRefreshToken(trecAuthentication.getAccount());
         token.setRefresh_token(refreshToken);
 
         this.SetCookie(response, refreshToken);
