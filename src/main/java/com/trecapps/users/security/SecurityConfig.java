@@ -6,8 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -48,22 +51,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain configure(HttpSecurity security) throws Exception
     {
-        security.csrf().disable().authorizeHttpRequests()
 
-                .requestMatchers(restrictedEndpoints)
-                .authenticated()
-                .and()
-                .authorizeHttpRequests()
-                .requestMatchers(verifiedEndpoints)
-                .hasAuthority("TREC_VERIFIED")
-                .and()
-                .authorizeHttpRequests()
-                .anyRequest()
-                .permitAll()
-                .and()
+        security = security.csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests((req) ->
+                    req
+                            .requestMatchers(restrictedEndpoints).authenticated()
+                            .requestMatchers(verifiedEndpoints).hasAuthority("TREC_VERIFIED")
+                            .anyRequest().permitAll()
+                )
                 .userDetailsService(trecAccountService)
-                .securityContext().securityContextRepository(trecSecurityContext).and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .securityContext((cust)->
+                    cust.securityContextRepository(trecSecurityContext)
+                )
+                .sessionManagement((cust)-> cust.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 ;
         return security.build();
     }

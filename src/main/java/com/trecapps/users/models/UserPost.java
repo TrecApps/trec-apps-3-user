@@ -59,8 +59,7 @@ public class UserPost {
 
         ret.setUserProfile(userPrincipalName);
 
-        var num = new PhoneNumber();
-        num.setNumber(mobilePhone);
+        var num = new PhoneNumber(mobilePhone);
         ret.setMobilePhone(num);
         ret.setPhoneVerified(false);
 
