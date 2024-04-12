@@ -42,7 +42,7 @@ dependencies {
     implementation 'com.trecapps.base:InfoResource:0.1.9'
     //Enable Trec-Auth
     //implementation 'com.trecapps.auth:TrecAuth:0.0.52'
-    implementation 'com.trecapps.auth:TrecAuth:0.3.3'
+    implementation 'com.trecapps.auth:TrecAuth:0.3.9'
     implementation 'com.twilio.sdk:twilio:9.2.2'
 
     // Security Dependencies
