@@ -182,18 +182,19 @@ public class AuthController //extends CookieControllerBase
         boolean result = sessionManager.removeSession(trecAuth.getAccount().getId(), sessionId);
 
         Cookie[] cookies = req.getCookies();
-        for (Cookie cook: cookies) {
-            if (cook.getName().equals(this.cookieName)) {
-                this.clearSessions(cook.getValue(), trecAuth.getAccount().getId());
-                cook.setValue("");
-                cook.setPath("/");
-                cook.setMaxAge(0);
-                if(domain != null)
-                    cook.setDomain(domain);
-                resp.addCookie(cook);
+        if(cookies != null)
+            for (Cookie cook: cookies) {
+                if (cook.getName().equals(this.cookieName)) {
+                    this.clearSessions(cook.getValue(), trecAuth.getAccount().getId());
+                    cook.setValue("");
+                    cook.setPath("/");
+                    cook.setMaxAge(0);
+                    if(domain != null)
+                        cook.setDomain(domain);
+                    resp.addCookie(cook);
 
+                }
             }
-        }
 
         return result ? new ResponseEntity(HttpStatus.NO_CONTENT) :
                 new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
