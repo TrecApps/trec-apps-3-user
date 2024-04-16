@@ -58,7 +58,7 @@ public class AuthController //extends CookieControllerBase
 
     String cookieName;
 
-
+    String domain;
 
     Logger logger = LoggerFactory.getLogger(AuthController.class);
 
@@ -69,7 +69,8 @@ public class AuthController //extends CookieControllerBase
                           @Autowired TrecAccountService trecAccountService1,
                           @Value("${trecauth.app}") String dApp,
                           @Value("${trecauth.use-cookie:false}")boolean uc,
-                          @Value("${trecauth.refresh.cookie-name:TREC_APPS_REFRESH}")String cn) {
+                          @Value("${trecauth.refresh.cookie-name:TREC_APPS_REFRESH}")String cn,
+                          @Value("${trecauth.refresh.domain:#{NULL}}") String domain) {
         this.authService = trecAccountService1;
         this.userStorageService = userStorageService1;
         this.sessionManager = sessionManager1;
@@ -78,6 +79,7 @@ public class AuthController //extends CookieControllerBase
         cookieName = cn;
 
         defaultApp = dApp;
+        this.domain = domain;
 
         logger.info("CookieBase Provided is {}", cookieBase != null);
     }
@@ -186,6 +188,8 @@ public class AuthController //extends CookieControllerBase
                 cook.setValue("");
                 cook.setPath("/");
                 cook.setMaxAge(0);
+                if(domain != null)
+                    cook.setDomain(domain);
                 resp.addCookie(cook);
 
             }
