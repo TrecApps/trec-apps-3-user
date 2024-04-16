@@ -7,11 +7,12 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan({
+@ComponentScan(basePackages = {
         "com.trecapps.users.*",                     // Scan this app
         "com.trecapps.base.InfoResource.models",    // usable models
         "com.trecapps.auth.*",                      // Authentication library
-        "com.trecapps.pictures.*"})                   // picture management
+        "com.trecapps.pictures.*"}
+)                   // picture management
 @EntityScan({"com.trecapps.auth.models.primary.*",
                 "com.trecapps.auth.models.secondary.*",
         "com.trecapps.pictures.models.*"})
