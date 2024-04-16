@@ -1,18 +1,21 @@
 package com.trecapps.users.controllers;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.controllers.CookieBase;
 import com.trecapps.auth.models.LoginToken;
+import com.trecapps.auth.models.TcUser;
 import com.trecapps.auth.models.TokenTime;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
-import com.trecapps.auth.services.JwtTokenService;
-import com.trecapps.auth.services.SessionManager;
-import com.trecapps.auth.services.TrecAccountService;
-import com.trecapps.auth.services.UserStorageService;
+import com.trecapps.auth.services.core.JwtTokenService;
+import com.trecapps.auth.services.core.SessionManager;
+import com.trecapps.auth.services.core.UserStorageService;
+import com.trecapps.auth.services.login.TrecAccountService;
 import com.trecapps.users.models.Login;
 import com.trecapps.users.models.TokenRequest;
 import com.trecapps.users.models.UserInfo;
 import com.trecapps.users.services.StateService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
@@ -37,32 +40,44 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/Auth")
-public class AuthController extends CookieControllerBase{
+public class AuthController //extends CookieControllerBase
+{
 
     TrecAccountService authService;
 
-
+    String defaultApp;
 
 
     SessionManager sessionManager;
 
     UserStorageService userStorageService;
 
+    JwtTokenService jwtTokenService;
 
+    boolean useCookie;
+
+    String cookieName;
 
 
 
     Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     public AuthController(@Autowired(required = false) CookieBase cookieBase,
-                          @Autowired JwtTokenService jwtTokenService,
+                          @Autowired JwtTokenService jwtTokenService1,
                           @Autowired UserStorageService userStorageService1,
                           @Autowired SessionManager sessionManager1,
-                          @Autowired TrecAccountService trecAccountService1) {
-        super(cookieBase, jwtTokenService);
+                          @Autowired TrecAccountService trecAccountService1,
+                          @Value("${trecauth.app}") String dApp,
+                          @Value("${trecauth.use-cookie:false}")boolean uc,
+                          @Value("${trecauth.refresh.cookie-name:TREC_APPS_REFRESH}")String cn) {
         this.authService = trecAccountService1;
         this.userStorageService = userStorageService1;
         this.sessionManager = sessionManager1;
+        this.jwtTokenService = jwtTokenService1;
+        useCookie = uc;
+        cookieName = cn;
+
+        defaultApp = dApp;
 
         logger.info("CookieBase Provided is {}", cookieBase != null);
     }
@@ -86,10 +101,20 @@ public class AuthController extends CookieControllerBase{
         return ret;
     }
 
+    @SneakyThrows
     @PostMapping("/login")
-    public ResponseEntity<LoginToken> login(@RequestBody Login login, HttpServletRequest request, HttpServletResponse response)
+    public ResponseEntity<LoginToken> login(
+            @RequestBody Login login,
+            @RequestParam(value = "app", defaultValue = "") String app,
+            HttpServletRequest request,
+            HttpServletResponse response)
     {
+        if("".equals(app))
+            app = defaultApp;
+
         TrecAccount account = authService.logInUsername(login.getUsername(), login.getPassword());
+
+        TcUser user =userStorageService.retrieveUser(account.getId());
 
         logger.info("User Agent String is: {}", request.getHeader("User-Agent"));
 
@@ -97,7 +122,7 @@ public class AuthController extends CookieControllerBase{
             return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
         if(account.getId() == null)
             return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
-        TokenTime userToken = jwtTokenService.generateToken(account, request.getHeader("User-Agent"), null, !Boolean.TRUE.equals(login.getStayLoggedIn()));
+        TokenTime userToken = jwtTokenService.generateToken(account, request.getHeader("User-Agent"), null, !Boolean.TRUE.equals(login.getStayLoggedIn()), app);
 
         if(userToken == null)
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -112,7 +137,7 @@ public class AuthController extends CookieControllerBase{
             ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
 
         SecurityContext secContext = SecurityContextHolder.createEmptyContext();
-        TrecAuthentication tAuth = new TrecAuthentication(account);
+        TrecAuthentication tAuth = new TrecAuthentication(user);
         String sessionId = jwtTokenService.getSessionId(ret.getAccess_token());
         logger.info("Session {} generated!", sessionId);
         tAuth.setSessionId(sessionId);
@@ -120,8 +145,8 @@ public class AuthController extends CookieControllerBase{
         secContext.setAuthentication(tAuth);
         SecurityContextHolder.setContext(secContext);
 
-        if(cookieBase != null)
-            applyCookie(tAuth, ret, response);
+        if(useCookie)
+            tAuth.setUseCookie(true);
 
         return new ResponseEntity<>(ret, HttpStatus.OK);
     }
@@ -134,6 +159,16 @@ public class AuthController extends CookieControllerBase{
         return null;
     }
 
+    void clearSessions(String value, String userId) {
+        DecodedJWT decodedJWT = this.jwtTokenService.decodeToken(value);
+        if (decodedJWT != null) {
+            Map<String, String> sessionList = this.jwtTokenService.claims(decodedJWT);
+            sessionList.forEach((_app, s) -> {
+                this.sessionManager.removeSession(userId, s);
+            });
+        }
+    }
+
 
     @GetMapping("/logout")
     public ResponseEntity logout(HttpServletRequest req, HttpServletResponse resp)
@@ -144,8 +179,17 @@ public class AuthController extends CookieControllerBase{
 
         boolean result = sessionManager.removeSession(trecAuth.getAccount().getId(), sessionId);
 
-        if(cookieBase != null)
-            cookieBase.RemoveCookie(req, resp, trecAuth.getAccount().getId());
+        Cookie[] cookies = req.getCookies();
+        for (Cookie cook: cookies) {
+            if (cook.getName().equals(this.cookieName)) {
+                this.clearSessions(cook.getValue(), trecAuth.getAccount().getId());
+                cook.setValue("");
+                cook.setPath("/");
+                cook.setMaxAge(0);
+                resp.addCookie(cook);
+
+            }
+        }
 
         return result ? new ResponseEntity(HttpStatus.NO_CONTENT) :
                 new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);

@@ -2,16 +2,13 @@ package com.trecapps.users.controllers;
 
 import com.trecapps.auth.controllers.CookieBase;
 import com.trecapps.auth.models.LoginToken;
-import com.trecapps.auth.models.TokenTime;
 import com.trecapps.auth.models.TrecAuthentication;
-import com.trecapps.auth.services.JwtTokenService;
+import com.trecapps.auth.services.core.JwtTokenService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;

@@ -7,10 +7,9 @@ import com.trecapps.auth.models.TcUser;
 import com.trecapps.auth.models.TokenTime;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
-import com.trecapps.auth.services.JwtTokenService;
-import com.trecapps.auth.services.SessionManager;
-import com.trecapps.auth.services.TrecAccountService;
-import com.trecapps.auth.services.UserStorageService;
+import com.trecapps.auth.services.core.JwtTokenService;
+import com.trecapps.auth.services.core.UserStorageService;
+import com.trecapps.auth.services.login.TrecAccountService;
 import com.trecapps.users.models.PasswordChange;
 import com.trecapps.users.models.UserPost;
 import jakarta.servlet.http.HttpServletResponse;
@@ -40,6 +39,8 @@ public class UserController extends CookieControllerBase{
 
     UserStorageService userStorageService;
 
+
+    @Value("${trecauth.app}") String defaultApp;
 
 
     public UserController(
@@ -89,11 +90,10 @@ public class UserController extends CookieControllerBase{
         userStorageService.saveUser(user);
 
 
-
         LoginToken token = new LoginToken();
         //sessionM
 
-        TokenTime userToken = jwtTokenService.generateToken(newAccount, request.getHeader("User-Agent"), null, false);
+        TokenTime userToken = jwtTokenService.generateToken(newAccount, request.getHeader("User-Agent"), null, false, defaultApp);
         //String refreshToken = jwtTokenService.generateRefreshToken(newAccount, null, userToken.getSession());
 
         if(userToken == null)
@@ -108,7 +108,7 @@ public class UserController extends CookieControllerBase{
         if(exp != null)
             token.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
         SecurityContext context = SecurityContextHolder.createEmptyContext();
-        TrecAuthentication tAuth = new TrecAuthentication(newAccount);
+        TrecAuthentication tAuth = new TrecAuthentication(user);
 
         tAuth.setLoginToken(token);
         String sessionId = jwtTokenService.getSessionId(token.getAccess_token());

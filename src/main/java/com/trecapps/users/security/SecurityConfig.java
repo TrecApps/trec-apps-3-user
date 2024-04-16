@@ -1,7 +1,7 @@
 package com.trecapps.users.security;
 
-import com.trecapps.auth.services.TrecAccountService;
-import com.trecapps.auth.services.TrecSecurityContext;
+import com.trecapps.auth.services.login.TrecAccountService;
+import com.trecapps.auth.services.web.TrecSecurityContextServlet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +12,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @EnableWebSecurity
 @Configuration
@@ -20,14 +22,14 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Autowired
-    SecurityConfig(TrecAccountService trecAccountService1, TrecSecurityContext trecSecurityContext1)
+    SecurityConfig(TrecAccountService trecAccountService1, TrecSecurityContextServlet trecSecurityContext1)
     {
         //aadAuthProps.setRedirectUriTemplate("http://localhost:4200/api");
         trecAccountService = trecAccountService1;
         trecSecurityContext = trecSecurityContext1;
     }
     TrecAccountService trecAccountService;
-    TrecSecurityContext trecSecurityContext;
+    TrecSecurityContextServlet trecSecurityContext;
 
     String[] restrictedEndpoints = {
             "/Users/passwordUpdate",
@@ -70,6 +72,11 @@ public class SecurityConfig {
     }
 
 
+
+//    SecurityWebFilterChain getChain(ServerHttpSecurity http){
+//        //http.authenticationManager()
+//        http.securityContextRepository()
+//    }
 
 
 

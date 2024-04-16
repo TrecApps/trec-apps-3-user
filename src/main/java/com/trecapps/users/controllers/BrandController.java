@@ -4,8 +4,9 @@ import com.trecapps.auth.models.LoginToken;
 import com.trecapps.auth.models.TcBrands;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.secondary.BrandEntry;
-import com.trecapps.auth.services.BrandService;
+import com.trecapps.auth.services.login.BrandService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -23,6 +24,8 @@ public class BrandController {
 
     @Autowired
     BrandService brandService;
+
+    @Value("${trecauth.app}") String defaultApp;
 
 
     @GetMapping("/{id}")
@@ -67,15 +70,20 @@ public class BrandController {
     }
 
     @GetMapping(value = "/login/{id}")
-    ResponseEntity<LoginToken> loginAs(@PathVariable("id") String uuid, HttpServletRequest request)
+    ResponseEntity<LoginToken> loginAs(
+            @PathVariable("id") String uuid,
+            @RequestParam(value = "app", defaultValue = "") String app,
+            HttpServletRequest request)
     {
+        if("".equals(app))
+            app = defaultApp;
         TrecAuthentication trecAuth = (TrecAuthentication) SecurityContextHolder.getContext().getAuthentication();
         LoginToken ret = brandService.LoginAsBrand(
                 trecAuth,
                 uuid,
                 request.getHeader("User-Agent"),
                 trecAuth.getSessionId(),
-                trecAuth.getLoginToken().getExpires_in() > 0);
+                trecAuth.getLoginToken().getExpires_in() > 0, app);
 
         if(null == ret)
             return new ResponseEntity<LoginToken>(HttpStatus.FORBIDDEN);
