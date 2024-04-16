@@ -2,10 +2,7 @@ package com.trecapps.users.controllers;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.trecapps.auth.controllers.CookieBase;
-import com.trecapps.auth.models.LoginToken;
-import com.trecapps.auth.models.TcUser;
-import com.trecapps.auth.models.TokenTime;
-import com.trecapps.auth.models.TrecAuthentication;
+import com.trecapps.auth.models.*;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.services.core.JwtTokenService;
 import com.trecapps.auth.services.core.SessionManager;
@@ -138,6 +135,9 @@ public class AuthController //extends CookieControllerBase
         if(exp != null)
             ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
 
+
+
+
         SecurityContext secContext = SecurityContextHolder.createEmptyContext();
         TrecAuthentication tAuth = new TrecAuthentication(user);
         String sessionId = jwtTokenService.getSessionId(ret.getAccess_token());
@@ -146,6 +146,8 @@ public class AuthController //extends CookieControllerBase
         tAuth.setLoginToken(ret);
         secContext.setAuthentication(tAuth);
         SecurityContextHolder.setContext(secContext);
+
+        ret.setRefresh_token(this.jwtTokenService.generateRefreshToken(tAuth.getAccount()));
 
         if(useCookie)
             tAuth.setUseCookie(true);
