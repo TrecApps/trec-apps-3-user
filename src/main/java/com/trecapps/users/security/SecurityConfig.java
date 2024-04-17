@@ -64,8 +64,9 @@ public class SecurityConfig {
                 .userDetailsService(trecAccountService)
                 .securityContext((cust)->
                     cust.securityContextRepository(trecSecurityContext)
+                            .requireExplicitSave(true)
                 )
-                .sessionManagement((cust)-> cust.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement((cust)-> cust.sessionCreationPolicy(SessionCreationPolicy.NEVER))
 
                 ;
         return security.build();

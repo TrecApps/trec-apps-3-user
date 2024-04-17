@@ -8,6 +8,7 @@ import com.trecapps.auth.services.core.JwtTokenService;
 import com.trecapps.auth.services.core.SessionManager;
 import com.trecapps.auth.services.core.UserStorageService;
 import com.trecapps.auth.services.login.TrecAccountService;
+import com.trecapps.auth.services.web.TrecSecurityContextServlet;
 import com.trecapps.users.models.Login;
 import com.trecapps.users.models.TokenRequest;
 import com.trecapps.users.models.UserInfo;
@@ -51,6 +52,8 @@ public class AuthController //extends CookieControllerBase
 
     JwtTokenService jwtTokenService;
 
+    TrecSecurityContextServlet securityContextServlet;
+
     boolean useCookie;
 
     String cookieName;
@@ -64,6 +67,7 @@ public class AuthController //extends CookieControllerBase
                           @Autowired UserStorageService userStorageService1,
                           @Autowired SessionManager sessionManager1,
                           @Autowired TrecAccountService trecAccountService1,
+                          @Autowired TrecSecurityContextServlet trecSecurityContextServlet1,
                           @Value("${trecauth.app}") String dApp,
                           @Value("${trecauth.use-cookie:false}")boolean uc,
                           @Value("${trecauth.refresh.cookie-name:TREC_APPS_REFRESH}")String cn,
@@ -72,6 +76,7 @@ public class AuthController //extends CookieControllerBase
         this.userStorageService = userStorageService1;
         this.sessionManager = sessionManager1;
         this.jwtTokenService = jwtTokenService1;
+        this.securityContextServlet = trecSecurityContextServlet1;
         useCookie = uc;
         cookieName = cn;
 
@@ -136,9 +141,11 @@ public class AuthController //extends CookieControllerBase
             ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
 
 
+        SecurityContext secContext = SecurityContextHolder.getContext();
 
+        if(secContext == null)
+            secContext = SecurityContextHolder.createEmptyContext();
 
-        SecurityContext secContext = SecurityContextHolder.createEmptyContext();
         TrecAuthentication tAuth = new TrecAuthentication(user);
         String sessionId = jwtTokenService.getSessionId(ret.getAccess_token());
         logger.info("Session {} generated!", sessionId);
@@ -151,6 +158,8 @@ public class AuthController //extends CookieControllerBase
 
         if(useCookie)
             tAuth.setUseCookie(true);
+
+        securityContextServlet.saveContext(secContext, request, response);
 
         return new ResponseEntity<>(ret, HttpStatus.OK);
     }
