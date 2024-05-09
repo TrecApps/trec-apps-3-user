@@ -38,10 +38,8 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
     // Include the sdk as a dependency
 
-    // Enable Branding
-    implementation 'com.trecapps.base:InfoResource:0.1.9'
     //Enable Trec-Auth
-    implementation 'com.trecapps.auth:TrecAuth:0.5.3'
+    implementation 'com.trecapps.auth:TrecAuth:0.5.5'
     implementation 'com.twilio.sdk:twilio:10.1.5'
 
     // Security Dependencies
