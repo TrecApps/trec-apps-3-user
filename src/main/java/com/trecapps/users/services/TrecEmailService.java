@@ -3,7 +3,7 @@ package com.trecapps.users.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.TcUser;
 import com.trecapps.auth.models.primary.TrecAccount;
-import com.trecapps.auth.services.core.UserStorageService;
+import com.trecapps.auth.services.core.IUserStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -20,7 +20,7 @@ public class TrecEmailService
 	JavaMailSender mailSender;
 
 	@Autowired
-	UserStorageService userStorageService;
+	IUserStorageService userStorageService;
 
 	@Autowired
 	StateService stateService;

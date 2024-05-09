@@ -1,6 +1,6 @@
 package com.trecapps.users.services;
 
-import com.trecapps.auth.services.core.UserStorageService;
+import com.trecapps.auth.services.core.IUserStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +17,7 @@ public class ConfigurationService {
     TrecSmsService getSmsService(@Value("${twilio.account}")String account,
                                  @Value("${twilio.token}") String token,
                                  @Value("${twilio.number}") String number,
-                                 @Autowired UserStorageService userStorageService,
+                                 @Autowired IUserStorageService userStorageService,
                                  @Autowired StateService stateService)
     {
         log.info("Setting up SMS Service!");

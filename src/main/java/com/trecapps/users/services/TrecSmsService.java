@@ -3,7 +3,7 @@ package com.trecapps.users.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.models.TcUser;
 import com.trecapps.auth.models.primary.TrecAccount;
-import com.trecapps.auth.services.core.UserStorageService;
+import com.trecapps.auth.services.core.IUserStorageService;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
@@ -20,13 +20,13 @@ public class TrecSmsService {
     String token;
     String number;
 
-    UserStorageService userStorageService;
+    IUserStorageService userStorageService;
     StateService stateService;
 
     TrecSmsService(String account1,
                    String token1,
                    String number1,
-                   UserStorageService userStorageService1,
+                   IUserStorageService userStorageService1,
                    StateService stateService1){
         account = account1;
         token = token1;

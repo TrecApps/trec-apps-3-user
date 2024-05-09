@@ -8,7 +8,7 @@ import com.trecapps.auth.models.TokenTime;
 import com.trecapps.auth.models.TrecAuthentication;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.services.core.JwtTokenService;
-import com.trecapps.auth.services.core.UserStorageService;
+import com.trecapps.auth.services.core.IUserStorageService;
 import com.trecapps.auth.services.login.TrecAccountService;
 import com.trecapps.users.models.PasswordChange;
 import com.trecapps.users.models.UserPost;
@@ -37,7 +37,7 @@ public class UserController extends CookieControllerBase{
 
     TrecAccountService userService;
 
-    UserStorageService userStorageService;
+    IUserStorageService userStorageService;
 
 
     @Value("${trecauth.app}") String defaultApp;
@@ -46,7 +46,7 @@ public class UserController extends CookieControllerBase{
     public UserController(
             @Autowired(required = false) CookieBase cookieBase,
             @Autowired TrecAccountService userService,
-            @Autowired UserStorageService userStorageService1,
+            @Autowired IUserStorageService userStorageService1,
             @Autowired JwtTokenService jwtTokenService1)
     {
         super(cookieBase, jwtTokenService1);

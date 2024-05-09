@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.2.4'
+    id 'org.springframework.boot' version '3.2.5'
     id 'jacoco'
 }
 
@@ -41,13 +41,12 @@ dependencies {
     // Enable Branding
     implementation 'com.trecapps.base:InfoResource:0.1.9'
     //Enable Trec-Auth
-    //implementation 'com.trecapps.auth:TrecAuth:0.0.52'
-    implementation 'com.trecapps.auth:TrecAuth:0.4.6'
-    implementation 'com.twilio.sdk:twilio:9.2.2'
+    implementation 'com.trecapps.auth:TrecAuth:0.5.3'
+    implementation 'com.twilio.sdk:twilio:10.1.5'
 
     // Security Dependencies
-    implementation 'org.springframework.boot:spring-boot-starter-security:3.2.4'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client:3.2.4'
+    implementation 'org.springframework.boot:spring-boot-starter-security:3.2.5'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client:3.2.5'
 
 
     // Azure Logging
@@ -57,16 +56,15 @@ dependencies {
 
     // Spring Boot features
 
-    implementation 'org.springframework.boot:spring-boot-starter:3.2.4'
-    //implementation 'org.springframework.boot:spring-boot-starter-tomcat:3.2.4'
-    implementation('org.springframework.boot:spring-boot-starter-web:3.2.4') {
+    implementation 'org.springframework.boot:spring-boot-starter:3.2.5'
+    implementation('org.springframework.boot:spring-boot-starter-web:3.2.5') {
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
     }
-    implementation 'org.springframework.boot:spring-boot-starter-undertow:3.2.4'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator:3.2.4'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:3.2.4'
-    implementation 'org.springframework.boot:spring-boot-starter-mail:3.2.4'
-    implementation "org.springframework.boot:spring-boot-starter-validation:3.2.4"
+    implementation 'org.springframework.boot:spring-boot-starter-undertow:3.2.5'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator:3.2.5'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:3.2.5'
+    implementation 'org.springframework.boot:spring-boot-starter-mail:3.2.5'
+    implementation "org.springframework.boot:spring-boot-starter-validation:3.2.5"
 
     implementation 'org.apache.httpcomponents:httpclient:+'
 
@@ -81,11 +79,11 @@ dependencies {
     //implementation 'org.springframework.boot:spring-boot-starter-data-jpa:+'
     // Use JWT for token generation and verification
     implementation 'com.auth0:java-jwt:+'
-    implementation 'org.bouncycastle:bcpkix-jdk15on:1.66'
+    implementation 'org.bouncycastle:bcpkix-jdk18on:1.78.1'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:+'
     implementation "com.azure.spring:spring-cloud-azure-starter-keyvault:5.11.0"
 
-    implementation 'mysql:mysql-connector-java:+' // mySQL
+    implementation 'com.mysql:mysql-connector-j:8.4.0' // mySQL
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'

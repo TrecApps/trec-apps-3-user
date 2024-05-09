@@ -6,7 +6,7 @@ import com.trecapps.auth.models.*;
 import com.trecapps.auth.models.primary.TrecAccount;
 import com.trecapps.auth.services.core.JwtTokenService;
 import com.trecapps.auth.services.core.SessionManager;
-import com.trecapps.auth.services.core.UserStorageService;
+import com.trecapps.auth.services.core.IUserStorageService;
 import com.trecapps.auth.services.login.TrecAccountService;
 import com.trecapps.auth.services.web.TrecSecurityContextServlet;
 import com.trecapps.users.models.Login;
@@ -48,7 +48,7 @@ public class AuthController //extends CookieControllerBase
 
     SessionManager sessionManager;
 
-    UserStorageService userStorageService;
+    IUserStorageService userStorageService;
 
     JwtTokenService jwtTokenService;
 
@@ -64,7 +64,7 @@ public class AuthController //extends CookieControllerBase
 
     public AuthController(@Autowired(required = false) CookieBase cookieBase,
                           @Autowired JwtTokenService jwtTokenService1,
-                          @Autowired UserStorageService userStorageService1,
+                          @Autowired IUserStorageService userStorageService1,
                           @Autowired SessionManager sessionManager1,
                           @Autowired TrecAccountService trecAccountService1,
                           @Autowired TrecSecurityContextServlet trecSecurityContextServlet1,
