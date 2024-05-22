@@ -1,8 +1,8 @@
 package com.trecapps.users.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.trecapps.auth.models.PhoneNumber;
-import com.trecapps.auth.models.TcUser;
+import com.trecapps.auth.common.models.PhoneNumber;
+import com.trecapps.auth.common.models.TcUser;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

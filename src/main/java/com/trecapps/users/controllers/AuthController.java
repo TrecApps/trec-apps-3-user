@@ -1,18 +1,16 @@
 package com.trecapps.users.controllers;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.trecapps.auth.controllers.CookieBase;
-import com.trecapps.auth.models.*;
-import com.trecapps.auth.models.primary.TrecAccount;
-import com.trecapps.auth.services.core.JwtTokenService;
-import com.trecapps.auth.services.core.SessionManager;
-import com.trecapps.auth.services.core.IUserStorageService;
-import com.trecapps.auth.services.login.TrecAccountService;
-import com.trecapps.auth.services.web.TrecSecurityContextServlet;
+import com.trecapps.auth.web.controllers.CookieBase;
+import com.trecapps.auth.common.models.*;
+import com.trecapps.auth.common.models.primary.TrecAccount;
+import com.trecapps.auth.web.services.JwtTokenService;
+import com.trecapps.auth.web.services.SessionManager;
+import com.trecapps.auth.web.services.IUserStorageService;
+import com.trecapps.auth.web.services.TrecAccountService;
+import com.trecapps.auth.web.services.TrecSecurityContextServlet;
 import com.trecapps.users.models.Login;
-import com.trecapps.users.models.TokenRequest;
 import com.trecapps.users.models.UserInfo;
-import com.trecapps.users.services.StateService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;

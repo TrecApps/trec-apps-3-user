@@ -1,10 +1,10 @@
 package com.trecapps.users.controllers;
 
-import com.trecapps.auth.models.LoginToken;
-import com.trecapps.auth.models.TcBrands;
-import com.trecapps.auth.models.TrecAuthentication;
-import com.trecapps.auth.models.secondary.BrandEntry;
-import com.trecapps.auth.services.login.BrandService;
+import com.trecapps.auth.common.models.LoginToken;
+import com.trecapps.auth.common.models.TcBrands;
+import com.trecapps.auth.common.models.TrecAuthentication;
+import com.trecapps.auth.common.models.secondary.BrandEntry;
+import com.trecapps.auth.web.services.BrandService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;

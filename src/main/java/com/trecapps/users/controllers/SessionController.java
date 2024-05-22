@@ -1,8 +1,8 @@
 package com.trecapps.users.controllers;
 
-import com.trecapps.auth.models.SessionList;
-import com.trecapps.auth.models.TrecAuthentication;
-import com.trecapps.auth.services.core.SessionManager;
+import com.trecapps.auth.common.models.SessionList;
+import com.trecapps.auth.common.models.TrecAuthentication;
+import com.trecapps.auth.web.services.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

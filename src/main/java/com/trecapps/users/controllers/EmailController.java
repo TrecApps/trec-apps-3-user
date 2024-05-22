@@ -1,7 +1,7 @@
 package com.trecapps.users.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.trecapps.auth.models.TrecAuthentication;
+import com.trecapps.auth.common.models.TrecAuthentication;
 import com.trecapps.users.services.TrecEmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

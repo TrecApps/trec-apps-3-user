@@ -1,7 +1,7 @@
 package com.trecapps.users.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.trecapps.auth.models.TrecAuthentication;
+import com.trecapps.auth.common.models.TrecAuthentication;
 import com.trecapps.users.services.TrecSmsService;
 import com.twilio.exception.ApiException;
 import lombok.extern.slf4j.Slf4j;

@@ -1,9 +1,9 @@
 package com.trecapps.users.controllers;
 
-import com.trecapps.auth.controllers.CookieBase;
-import com.trecapps.auth.models.LoginToken;
-import com.trecapps.auth.models.TrecAuthentication;
-import com.trecapps.auth.services.core.JwtTokenService;
+import com.trecapps.auth.web.controllers.CookieBase;
+import com.trecapps.auth.common.models.LoginToken;
+import com.trecapps.auth.common.models.TrecAuthentication;
+import com.trecapps.auth.web.services.JwtTokenService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

@@ -1,7 +1,7 @@
 package com.trecapps.users.models;
 
-import com.trecapps.auth.models.TcBrands;
-import com.trecapps.auth.models.TcUser;
+import com.trecapps.auth.common.models.TcBrands;
+import com.trecapps.auth.common.models.TcUser;
 import lombok.Data;
 
 @Data

@@ -1,9 +1,9 @@
 package com.trecapps.users.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.trecapps.auth.models.TcUser;
-import com.trecapps.auth.models.primary.TrecAccount;
-import com.trecapps.auth.services.core.IUserStorageService;
+import com.trecapps.auth.common.models.TcUser;
+import com.trecapps.auth.common.models.primary.TrecAccount;
+import com.trecapps.auth.web.services.IUserStorageService;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;

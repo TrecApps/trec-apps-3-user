@@ -1,7 +1,7 @@
 package com.trecapps.users.security;
 
-import com.trecapps.auth.services.login.TrecAccountService;
-import com.trecapps.auth.services.web.TrecSecurityContextServlet;
+import com.trecapps.auth.web.services.TrecAccountService;
+import com.trecapps.auth.web.services.TrecSecurityContextServlet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,6 +1,6 @@
 package com.trecapps.users.services;
 
-import com.trecapps.auth.services.core.IUserStorageService;
+import com.trecapps.auth.web.services.IUserStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
