@@ -1,16 +1,18 @@
 package com.trecapps.users.controllers;
 
-import com.trecapps.auth.web.controllers.CookieBase;
+import com.trecapps.auth.webflux.controllers.CookieBase;
 import com.trecapps.auth.common.models.LoginToken;
 import com.trecapps.auth.common.models.TrecAuthentication;
-import com.trecapps.auth.web.services.JwtTokenService;
+import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
+import io.netty.handler.codec.http.cookie.DefaultCookie;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import reactor.netty.http.server.HttpServerResponse;
 
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class CookieControllerBase {
@@ -18,16 +20,24 @@ public class CookieControllerBase {
     Logger logger = LoggerFactory.getLogger(CookieControllerBase.class);
 
     CookieBase cookieBase;
-    JwtTokenService jwtTokenService;
+    JwtTokenServiceAsync jwtTokenService;
 
-    CookieControllerBase(CookieBase cb, JwtTokenService jwtTokenService1)
+    @Value("${trecauth.refresh.domain}")
+    String domain;
+
+    @Value("${trecauth.refresh.cookie-name:TREC_APPS_REFRESH}")
+    String cookieName;
+
+    CookieControllerBase(CookieBase cb, JwtTokenServiceAsync jwtTokenService1, String domain, String cookieName)
     {
+        this.cookieName = cookieName;
+        this.domain = domain;
         cookieBase = cb;
         jwtTokenService = jwtTokenService1;
     }
 
 
-    void applyCookie(TrecAuthentication trecAuthentication, LoginToken token, HttpServletResponse response){
+    void applyCookie(TrecAuthentication trecAuthentication, LoginToken token, HttpServerResponse response){
 
         String refreshToken = jwtTokenService.generateRefreshToken(trecAuthentication.getAccount());
         token.setRefresh_token(refreshToken);
@@ -36,15 +46,18 @@ public class CookieControllerBase {
 
     }
 
-    void SetCookie(HttpServletResponse response, String refreshToken){
-        Cookie cook = new Cookie(cookieBase.getCookieName(), refreshToken);
+    void SetCookie(HttpServerResponse response, String refreshToken){
+
+        io.netty.handler.codec.http.cookie.Cookie cook = new DefaultCookie(this.cookieName, refreshToken);
         cook.setHttpOnly(true);
         cook.setPath("/");
-        cook.setDomain(cookieBase.getDomain());
+        if (this.domain != null) {
+            this.logger.info("Setting Cookie domain to {}", this.domain);
+            cook.setDomain(this.domain);
+        }
+
         cook.setSecure(true);
-
-        cook.setMaxAge((int)TimeUnit.DAYS.toSeconds(7));
-
+        cook.setMaxAge((long)((int)TimeUnit.DAYS.toSeconds(7L)));
         response.addCookie(cook);
     }
 

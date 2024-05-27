@@ -3,14 +3,16 @@ package com.trecapps.users.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.common.models.TcUser;
 import com.trecapps.auth.common.models.primary.TrecAccount;
-import com.trecapps.auth.web.services.IUserStorageService;
+import com.trecapps.auth.webflux.services.IUserStorageServiceAsync;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 
 @Slf4j
@@ -20,13 +22,13 @@ public class TrecSmsService {
     String token;
     String number;
 
-    IUserStorageService userStorageService;
+    IUserStorageServiceAsync userStorageService;
     StateService stateService;
 
     TrecSmsService(String account1,
                    String token1,
                    String number1,
-                   IUserStorageService userStorageService1,
+                   IUserStorageServiceAsync userStorageService1,
                    StateService stateService1){
         account = account1;
         token = token1;
@@ -44,42 +46,57 @@ public class TrecSmsService {
         return account != null && token != null && number != null;
     }
 
-    public boolean validatePhone(TrecAccount account, @NotNull String enteredCode) throws JsonProcessingException {
-        TcUser user = userStorageService.retrieveUser(account.getId());
+    public Mono<Boolean> validatePhone(TrecAccount account, @NotNull String enteredCode) throws JsonProcessingException {
 
-        Map<String, String> codes = user.getVerificationCodes();
-        if(codes == null || !codes.containsKey("SMS")) {
-            log.info("SMS Code has not been set up!");
-            return false;
-        }
-        // To-Do: Add Expiration Map in future build of TrecAuth and use here
-        if(enteredCode.equals(codes.get("SMS")))
-        {
-            user.setPhoneVerified(true);
-            userStorageService.saveUser(user);
-            return true;
-        }
-        log.info("Codes {} and {} do not match!", enteredCode, codes.get("SMS"));
-        return false;
+        return userStorageService.getAccountById(account.getId())
+                .map((Optional<TcUser> optUser) -> {
+                    if(optUser.isEmpty())
+                    {
+                        log.info("User Not Found");
+                        return false;
+                    }
+                    TcUser user = optUser.get();
+                    Map<String, String> codes = user.getVerificationCodes();
+                    if(codes == null || !codes.containsKey("SMS")) {
+                        log.info("SMS Code has not been set up!");
+                        return false;
+                    }
+                    // To-Do: Add Expiration Map in future build of TrecAuth and use here
+                    if(enteredCode.equals(codes.get("SMS")))
+                    {
+                        user.setPhoneVerified(true);
+                        userStorageService.saveUser(user);
+                        return true;
+                    }
+                    log.info("Codes {} and {} do not match!", enteredCode, codes.get("SMS"));
+                    return false;
+                });
     }
 
     public void sendCode(TrecAccount account) throws JsonProcessingException {
-        TcUser user = userStorageService.retrieveUser(account.getId());
 
-        String code = stateService.generateState();
+        userStorageService.getAccountById(account.getId())
+                .doOnNext((Optional<TcUser> optUser) -> {
+                    if(optUser.isEmpty())
+                    {
+                        log.info("User Not Found");
+                    }
+                    TcUser user = optUser.get();
+                    String code = stateService.generateState();
 
-        Map<String, String> codes = user.getVerificationCodes();
-        if(codes == null)
-            codes = new TreeMap<>();
+                    Map<String, String> codes = user.getVerificationCodes();
+                    if(codes == null)
+                        codes = new TreeMap<>();
 
-        codes.put("SMS", code);
-        user.setVerificationCodes(codes);
+                    codes.put("SMS", code);
+                    user.setVerificationCodes(codes);
 
-        userStorageService.saveUser(user);
+                    userStorageService.saveUser(user);
 
-        log.info("Sending message to {}", user.getMobilePhone().toString());
+                    log.info("Sending message to {}", user.getMobilePhone().toString());
 
-        sendCode(code, user.getMobilePhone().toString());
+                    sendCode(code, user.getMobilePhone().toString());
+                }).subscribe();
     }
 
     public void sendCode(String code, String phone){

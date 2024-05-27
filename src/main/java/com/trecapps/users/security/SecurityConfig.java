@@ -1,7 +1,8 @@
 package com.trecapps.users.security;
 
-import com.trecapps.auth.web.services.TrecAccountService;
-import com.trecapps.auth.web.services.TrecSecurityContextServlet;
+import com.trecapps.auth.webflux.services.TrecAccountServiceAsync;
+import com.trecapps.auth.webflux.services.TrecAuthManagerReactive;
+import com.trecapps.auth.webflux.services.TrecSecurityContextReactive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,25 +12,29 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
-@EnableWebSecurity
+@EnableWebFluxSecurity
 @Configuration
 @Order(1)
 public class SecurityConfig {
 
     @Autowired
-    SecurityConfig(TrecAccountService trecAccountService1, TrecSecurityContextServlet trecSecurityContext1)
+    SecurityConfig(TrecAccountServiceAsync trecAccountService1,
+                   TrecSecurityContextReactive trecSecurityContext1,
+                   TrecAuthManagerReactive trecAuthManagerReactive)
     {
         //aadAuthProps.setRedirectUriTemplate("http://localhost:4200/api");
         trecAccountService = trecAccountService1;
         trecSecurityContext = trecSecurityContext1;
     }
-    TrecAccountService trecAccountService;
-    TrecSecurityContextServlet trecSecurityContext;
+    TrecAccountServiceAsync trecAccountService;
+    TrecSecurityContextReactive trecSecurityContext;
+    TrecAuthManagerReactive trecAuthManagerReactive;
 
     String[] restrictedEndpoints = {
             "/Users/passwordUpdate",
@@ -51,34 +56,18 @@ public class SecurityConfig {
     };
 
     @Bean
-    public SecurityFilterChain configure(HttpSecurity security) throws Exception
-    {
+    public SecurityWebFilterChain securityWebFilterChain(
+            ServerHttpSecurity http) {
+        return http
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers(restrictedEndpoints).authenticated()
+                        .pathMatchers(verifiedEndpoints).hasAuthority("TREC_VERIFIED")
+                        .anyExchange().permitAll())
+                .authenticationManager(trecAuthManagerReactive)
+                .securityContextRepository(trecSecurityContext)
 
-        security = security.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests((req) ->
-                    req
-                            .requestMatchers(restrictedEndpoints).authenticated()
-                            .requestMatchers(verifiedEndpoints).hasAuthority("TREC_VERIFIED")
-                            .anyRequest().permitAll()
-                )
-                .userDetailsService(trecAccountService)
-                .securityContext((cust)->
-                    cust.securityContextRepository(trecSecurityContext)
-                            .requireExplicitSave(true)
-                )
-                .sessionManagement((cust)-> cust.sessionCreationPolicy(SessionCreationPolicy.NEVER))
-
-                ;
-        return security.build();
+                .build();
     }
-
-
-
-//    SecurityWebFilterChain getChain(ServerHttpSecurity http){
-//        //http.authenticationManager()
-//        http.securityContextRepository()
-//    }
-
-
 
 }

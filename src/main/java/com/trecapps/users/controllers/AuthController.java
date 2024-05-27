@@ -1,19 +1,22 @@
 package com.trecapps.users.controllers;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.trecapps.auth.web.controllers.CookieBase;
+import com.trecapps.auth.webflux.controllers.CookieBase;
 import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.common.models.primary.TrecAccount;
-import com.trecapps.auth.web.services.JwtTokenService;
-import com.trecapps.auth.web.services.SessionManager;
-import com.trecapps.auth.web.services.IUserStorageService;
-import com.trecapps.auth.web.services.TrecAccountService;
-import com.trecapps.auth.web.services.TrecSecurityContextServlet;
+import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
+import com.trecapps.auth.webflux.services.SessionManagerAsync;
+import com.trecapps.auth.webflux.services.IUserStorageServiceAsync;
+import com.trecapps.auth.webflux.services.TrecAccountServiceAsync;
+import com.trecapps.auth.webflux.services.TrecSecurityContextReactive;
+import com.trecapps.users.models.IdBodyExtender;
 import com.trecapps.users.models.Login;
+import com.trecapps.users.models.User;
 import com.trecapps.users.models.UserInfo;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
+import org.antlr.v4.runtime.Token;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +30,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
+
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 
 @RestController
@@ -39,20 +44,21 @@ import java.util.UUID;
 public class AuthController //extends CookieControllerBase
 {
 
-    TrecAccountService authService;
+    TrecAccountServiceAsync authService;
 
     String defaultApp;
 
 
-    SessionManager sessionManager;
+    SessionManagerAsync sessionManager;
 
-    IUserStorageService userStorageService;
+    IUserStorageServiceAsync userStorageService;
 
-    JwtTokenService jwtTokenService;
+    JwtTokenServiceAsync jwtTokenService;
 
-    TrecSecurityContextServlet securityContextServlet;
+    TrecSecurityContextReactive securityContextServlet;
 
     boolean useCookie;
+    CookieBase cookieBase;
 
     String cookieName;
 
@@ -61,11 +67,11 @@ public class AuthController //extends CookieControllerBase
     Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     public AuthController(@Autowired(required = false) CookieBase cookieBase,
-                          @Autowired JwtTokenService jwtTokenService1,
-                          @Autowired IUserStorageService userStorageService1,
-                          @Autowired SessionManager sessionManager1,
-                          @Autowired TrecAccountService trecAccountService1,
-                          @Autowired TrecSecurityContextServlet trecSecurityContextServlet1,
+                          @Autowired JwtTokenServiceAsync jwtTokenService1,
+                          @Autowired IUserStorageServiceAsync userStorageService1,
+                          @Autowired SessionManagerAsync sessionManager1,
+                          @Autowired TrecAccountServiceAsync trecAccountService1,
+                          @Autowired TrecSecurityContextReactive trecSecurityContextServlet1,
                           @Value("${trecauth.app}") String dApp,
                           @Value("${trecauth.use-cookie:false}")boolean uc,
                           @Value("${trecauth.refresh.cookie-name:TREC_APPS_REFRESH}")String cn,
@@ -75,6 +81,7 @@ public class AuthController //extends CookieControllerBase
         this.sessionManager = sessionManager1;
         this.jwtTokenService = jwtTokenService1;
         this.securityContextServlet = trecSecurityContextServlet1;
+        this.cookieBase = cookieBase;
         useCookie = uc;
         cookieName = cn;
 
@@ -86,89 +93,89 @@ public class AuthController //extends CookieControllerBase
 
     private ResponseEntity<LoginToken> generateResponse(LoginToken token)
     {
-        if(token.getAccess_token() == null || token.getAccess_token().length() == 0)
+        if(token.getAccess_token() == null || token.getAccess_token().isEmpty())
             return new ResponseEntity<LoginToken>(token, HttpStatus.UNAUTHORIZED);
         return new ResponseEntity<LoginToken>(token, HttpStatus.OK);
     }
 
     @GetMapping("/permissions")
-    public List<String> permissions(Authentication authentication)
+    public Mono<List<String>> permissions(Authentication authentication)
     {
-        TrecAuthentication trecAuthentication = (TrecAuthentication) authentication;
-
-        List<String> ret = new ArrayList<>();
-        for(GrantedAuthority ga :trecAuthentication.getAuthorities()) {
-            ret.add(ga.getAuthority());
-        }
-        return ret;
+        return Mono.just((TrecAuthentication) authentication)
+                .map((TrecAuthentication trecAuthentication) -> {
+                    List<String> ret = new ArrayList<>();
+                    for(GrantedAuthority ga :trecAuthentication.getAuthorities()) {
+                        ret.add(ga.getAuthority());
+                    }
+                    return ret;
+                });
     }
 
     @SneakyThrows
     @PostMapping("/login")
-    public ResponseEntity<LoginToken> login(
+    public Mono<ResponseEntity<LoginToken>> login(
             @RequestBody Login login,
             @RequestParam(value = "app", defaultValue = "") String app,
-            HttpServletRequest request,
-            HttpServletResponse response)
+            HttpServerRequest request,
+            HttpServerResponse response)
     {
         if("".equals(app))
             app = defaultApp;
 
-        TrecAccount account = authService.logInUsername(login.getUsername(), login.getPassword());
+        String finalApp = app;
+        return authService.logInUsername(login.getUsername(), login.getPassword())
+                .flatMap((Optional<TrecAccount> accountOpt) -> {
+                            if (accountOpt.isEmpty())
+                                throw new ResponseEntityException(null, HttpStatus.UNAUTHORIZED);
+                            TrecAccount account = accountOpt.get();
+                            if (account.getId() == null)
+                                throw new ResponseEntityException(null, HttpStatus.FORBIDDEN);
 
-        TcUser user =userStorageService.retrieveUser(account.getId());
+                            return jwtTokenService
+                                    .generateToken(
+                                            account,
+                                            request.requestHeaders().get("User-Agent"),
+                                            null,
+                                            !Boolean.TRUE.equals(login.getStayLoggedIn()),
+                                            finalApp)
+                                    .map((Optional<TokenTime> tt) ->
+                                            tt.<IdBodyExtender<TokenTime>>map(tokenTime -> new IdBodyExtender<>(tokenTime, account.getId(), account.getUsername())).orElseGet(() -> new IdBodyExtender<>(account.getId(), account.getUsername())))
+                                    ;
 
-        logger.info("User Agent String is: {}", request.getHeader("User-Agent"));
+                        })
+                .map((IdBodyExtender<TokenTime> userTokenOpt) -> {
+                    if(userTokenOpt.isEmpty())
+                        return new ResponseEntity<LoginToken>(HttpStatus.INTERNAL_SERVER_ERROR);
 
-        if(account == null)
-            return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
-        if(account.getId() == null)
-            return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
-        TokenTime userToken = jwtTokenService.generateToken(account, request.getHeader("User-Agent"), null, !Boolean.TRUE.equals(login.getStayLoggedIn()), app);
+                    TokenTime userToken = userTokenOpt.getFullBody();
+                    LoginToken ret = new LoginToken();
+                    ret.setToken_type("User");
+                    ret.setAccess_token(userToken.getToken());
+                    TrecAccount account = new TrecAccount();
+                    account.setId(userTokenOpt.getId());
+                    account.setUsername(userTokenOpt.getUserName());
+                    ret.setRefresh_token(this.jwtTokenService.generateRefreshToken(account));
+                    OffsetDateTime exp = userToken.getExpiration();
+                    if(exp != null)
+                        ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
 
-        if(userToken == null)
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-
-
-        LoginToken ret = new LoginToken();
-        ret.setToken_type("User");
-        ret.setAccess_token(userToken.getToken());
-
-        OffsetDateTime exp = userToken.getExpiration();
-        if(exp != null)
-            ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
+                    if(useCookie && cookieBase != null) {
+                        cookieBase.SetCookie(response, ret.getRefresh_token());
+                    }
 
 
-        SecurityContext secContext = SecurityContextHolder.getContext();
+                    return new ResponseEntity<LoginToken>(ret, HttpStatus.OK);
+                });
 
-        if(secContext == null)
-            secContext = SecurityContextHolder.createEmptyContext();
-
-        TrecAuthentication tAuth = new TrecAuthentication(user);
-        String sessionId = jwtTokenService.getSessionId(ret.getAccess_token());
-        logger.info("Session {} generated!", sessionId);
-        tAuth.setSessionId(sessionId);
-        tAuth.setLoginToken(ret);
-        secContext.setAuthentication(tAuth);
-        SecurityContextHolder.setContext(secContext);
-
-        ret.setRefresh_token(this.jwtTokenService.generateRefreshToken(tAuth.getAccount()));
-
-        if(useCookie)
-            tAuth.setUseCookie(true);
-
-        securityContextServlet.saveContext(secContext, request, response);
-
-        return new ResponseEntity<>(ret, HttpStatus.OK);
     }
 
 
-    @PostMapping("/refresh")
-    public ResponseEntity<LoginToken> refreshCode(@RequestBody String refreshToken, @RequestParam("Redirect")String redirect)
-    {
-        // return generateResponse(authService.getTokenFromRefresh(redirect, refreshToken).getBody());
-        return null;
-    }
+//    @PostMapping("/refresh")
+//    public ResponseEntity<LoginToken> refreshCode(@RequestBody String refreshToken, @RequestParam("Redirect")String redirect)
+//    {
+//        // return generateResponse(authService.getTokenFromRefresh(redirect, refreshToken).getBody());
+//        return null;
+//    }
 
     void clearSessions(String value, String userId) {
         DecodedJWT decodedJWT = this.jwtTokenService.decodeToken(value);
@@ -182,38 +189,27 @@ public class AuthController //extends CookieControllerBase
 
 
     @GetMapping("/logout")
-    public ResponseEntity logout(HttpServletRequest req, HttpServletResponse resp)
+    public Mono<ResponseEntity<Void>> logout(HttpServerRequest req, HttpServerResponse resp)
     {
         TrecAuthentication trecAuth = (TrecAuthentication) SecurityContextHolder.getContext().getAuthentication();
 
         String sessionId = trecAuth.getSessionId();
 
-        boolean result = sessionManager.removeSession(trecAuth.getAccount().getId(), sessionId);
+        return sessionManager.removeSession(trecAuth.getAccount().getId(), sessionId)
+                .doOnNext((Boolean result) -> {
+                    if(useCookie && cookieBase != null)
+                        cookieBase.RemoveCookie(req, resp, trecAuth.getAccount().getId());
+                })
+                .map((Boolean result) -> result ? new ResponseEntity<>(HttpStatus.NO_CONTENT) :
+                        new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
 
-        Cookie[] cookies = req.getCookies();
-        if(cookies != null)
-            for (Cookie cook: cookies) {
-                if (cook.getName().equals(this.cookieName)) {
-                    this.clearSessions(cook.getValue(), trecAuth.getAccount().getId());
-                    cook.setValue("");
-                    cook.setPath("/");
-                    cook.setMaxAge(0);
-                    if(domain != null)
-                        cook.setDomain(domain);
-                    resp.addCookie(cook);
-
-                }
-            }
-
-        return result ? new ResponseEntity(HttpStatus.NO_CONTENT) :
-                new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 
 
     @SneakyThrows
     @GetMapping("/User")
-    ResponseEntity<UserInfo> getUserInfo(Authentication authentication)
+    Mono<ResponseEntity<UserInfo>> getUserInfo(Authentication authentication)
     {
         TrecAuthentication authentication1 = (TrecAuthentication) authentication;
         TrecAccount account = authentication1.getAccount();
@@ -223,11 +219,28 @@ public class AuthController //extends CookieControllerBase
         String brandId = brandUuid == null ? null : brandUuid.toString();
 
         UserInfo ret = new UserInfo();
-        ret.setUser(userStorageService.retrieveUser(account.getId()));
-        if(brandId != null)
-            ret.setBrand(userStorageService.retrieveBrand(brandId));
 
-        return new ResponseEntity<>(ret, HttpStatus.OK);
+        return Mono.just(ret)
+                        .flatMap((UserInfo r) -> {
+                            return userStorageService.getAccountById(account.getId())
+                                    .map((Optional<TcUser> oUser) -> {
+                                        if(oUser.isPresent())
+                                            r.setUser(oUser.get());
+                                        return r;
+                                    });
+                        }).flatMap((UserInfo r) -> {
+                          if(brandId != null)
+                          {
+                              return userStorageService.getBrandById(brandId)
+                                      .map((Optional<TcBrands> oBrand) -> {
+                                          if(oBrand.isPresent())
+                                              r.setBrand(oBrand.get());
+                                          return r;
+                                      });
+                          }
+                          return Mono.just(r);
+                        }).map(ResponseEntity::ok);
+
     }
 
 

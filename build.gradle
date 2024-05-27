@@ -57,7 +57,7 @@ dependencies {
     // Spring Boot features
 
     implementation 'org.springframework.boot:spring-boot-starter:3.2.5'
-    implementation('org.springframework.boot:spring-boot-starter-web:3.2.5') {
+    implementation('org.springframework.boot:spring-boot-starter-webflux:3.2.5') {
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
     }
     implementation 'org.springframework.boot:spring-boot-starter-undertow:3.2.5'
