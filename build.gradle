@@ -39,7 +39,7 @@ dependencies {
     // Include the sdk as a dependency
 
     //Enable Trec-Auth
-    implementation 'com.trecapps.auth:TrecAuth:0.6.6'
+    implementation 'com.trecapps.auth:TrecAuth:0.6.13'
     implementation 'com.twilio.sdk:twilio:10.1.5'
 
     // Security Dependencies
@@ -83,6 +83,10 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:+'
     implementation "com.azure.spring:spring-cloud-azure-starter-keyvault:5.11.0"
     implementation 'software.amazon.awssdk:secretsmanager:2.25.56'
+
+    implementation platform('com.google.cloud:libraries-bom:26.38.0')
+    implementation 'com.google.cloud:google-cloud-storage'      // Use GCP Cloud Storage for Storage
+    implementation 'com.google.cloud:google-cloud-secretmanager:2.42.0'         // Getting Secret info from GCP Secret Manager
 
     implementation 'com.mysql:mysql-connector-j:8.4.0' // mySQL
 
