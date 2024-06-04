@@ -30,10 +30,8 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import reactor.netty.http.server.HttpServerRequest;
-import reactor.netty.http.server.HttpServerResponse;
-import reactor.util.function.Tuple2;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -69,8 +67,7 @@ public class UserController extends CookieControllerBase{
     @PostMapping("/createUser")
     public Mono<ResponseEntity> createNewUser(
             RequestEntity<UserPost> post,
-            HttpServerRequest request,
-            HttpServerResponse response)
+            ServerWebExchange exchange)
     {
 
         return Mono.just(post.getBody())
@@ -99,7 +96,7 @@ public class UserController extends CookieControllerBase{
 
 
 
-                    return jwtTokenService.generateToken(newAccount, request.requestHeaders().get("User-Agent"), null, false, defaultApp);
+                    return jwtTokenService.generateToken(newAccount, exchange.getRequest().getHeaders().get("User-Agent").get(0), null, false, defaultApp);
                 }).map((Optional<TokenTime> userTokenOpt) -> {
                     if(userTokenOpt.isEmpty())
                         return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -124,7 +121,7 @@ public class UserController extends CookieControllerBase{
                     SecurityContextHolder.setContext(context);
 
                     if(cookieBase != null)
-                        applyCookie(tAuth, token, response);
+                        applyCookie(tAuth, token, exchange.getResponse());
 
                     return new ResponseEntity(token, HttpStatus.OK);
                 })
@@ -177,7 +174,7 @@ public class UserController extends CookieControllerBase{
     public Mono<ResponseEntity<String>> updatePassword(RequestEntity<PasswordChange> post, Authentication auth)
     {
         return Mono.just(new AuthenticationBody<PasswordChange>((TrecAuthentication)auth,post.getBody()))
-                .flatMap((AuthenticationBody<PasswordChange> pc) -> {
+                .map((AuthenticationBody<PasswordChange> pc) -> {
                     return userService.changePassword(
                             pc.getAuthentication().getAccount(),
                             pc.getData().getCurrentPassword(),

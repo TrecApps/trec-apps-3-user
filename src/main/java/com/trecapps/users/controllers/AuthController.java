@@ -16,17 +16,16 @@ import com.trecapps.users.models.UserInfo;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
-import org.antlr.v4.runtime.Token;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -116,8 +115,7 @@ public class AuthController //extends CookieControllerBase
     public Mono<ResponseEntity<LoginToken>> login(
             @RequestBody Login login,
             @RequestParam(value = "app", defaultValue = "") String app,
-            HttpServerRequest request,
-            HttpServerResponse response)
+            ServerWebExchange exchange)
     {
         if("".equals(app))
             app = defaultApp;
@@ -128,13 +126,15 @@ public class AuthController //extends CookieControllerBase
                             if (accountOpt.isEmpty())
                                 throw new ResponseEntityException(null, HttpStatus.UNAUTHORIZED);
                             TrecAccount account = accountOpt.get();
+                            if(account.isInvalid())
+                                throw new ResponseEntityException(null, HttpStatus.UNAUTHORIZED);
                             if (account.getId() == null)
                                 throw new ResponseEntityException(null, HttpStatus.FORBIDDEN);
 
                             return jwtTokenService
                                     .generateToken(
                                             account,
-                                            request.requestHeaders().get("User-Agent"),
+                                            exchange.getRequest().getHeaders().get("User-Agent").get(0),
                                             null,
                                             !Boolean.TRUE.equals(login.getStayLoggedIn()),
                                             finalApp)
@@ -159,9 +159,9 @@ public class AuthController //extends CookieControllerBase
                     if(exp != null)
                         ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
 
-                    if(useCookie && cookieBase != null) {
-                        cookieBase.SetCookie(response, ret.getRefresh_token());
-                    }
+//                    if(useCookie && cookieBase != null) {
+//                        cookieBase.SetCookie(response, ret.getRefresh_token());
+//                    }
 
 
                     return new ResponseEntity<LoginToken>(ret, HttpStatus.OK);
@@ -189,16 +189,18 @@ public class AuthController //extends CookieControllerBase
 
 
     @GetMapping("/logout")
-    public Mono<ResponseEntity<Void>> logout(HttpServerRequest req, HttpServerResponse resp)
+    public Mono<ResponseEntity<Void>> logout(ServerWebExchange exchange, Authentication authentication)
     {
-        TrecAuthentication trecAuth = (TrecAuthentication) SecurityContextHolder.getContext().getAuthentication();
+        ServerHttpRequest req = exchange.getRequest();
+        ServerHttpResponse resp = exchange.getResponse();
+        TrecAuthentication trecAuth = (TrecAuthentication) authentication;
 
         String sessionId = trecAuth.getSessionId();
 
         return sessionManager.removeSession(trecAuth.getAccount().getId(), sessionId)
                 .doOnNext((Boolean result) -> {
                     if(useCookie && cookieBase != null)
-                        cookieBase.RemoveCookie(req, resp, trecAuth.getAccount().getId());
+                        cookieBase.RemoveCookie(resp, req, trecAuth.getAccount().getId());
                 })
                 .map((Boolean result) -> result ? new ResponseEntity<>(HttpStatus.NO_CONTENT) :
                         new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));

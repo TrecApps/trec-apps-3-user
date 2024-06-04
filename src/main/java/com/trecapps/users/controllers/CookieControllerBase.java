@@ -11,6 +11,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import reactor.netty.http.server.HttpServerResponse;
 
 import java.util.concurrent.TimeUnit;
@@ -37,7 +39,7 @@ public class CookieControllerBase {
     }
 
 
-    void applyCookie(TrecAuthentication trecAuthentication, LoginToken token, HttpServerResponse response){
+    void applyCookie(TrecAuthentication trecAuthentication, LoginToken token, ServerHttpResponse response){
 
         String refreshToken = jwtTokenService.generateRefreshToken(trecAuthentication.getAccount());
         token.setRefresh_token(refreshToken);
@@ -46,19 +48,16 @@ public class CookieControllerBase {
 
     }
 
-    void SetCookie(HttpServerResponse response, String refreshToken){
+    void SetCookie(ServerHttpResponse response, String refreshToken){
 
-        io.netty.handler.codec.http.cookie.Cookie cook = new DefaultCookie(this.cookieName, refreshToken);
-        cook.setHttpOnly(true);
-        cook.setPath("/");
-        if (this.domain != null) {
-            this.logger.info("Setting Cookie domain to {}", this.domain);
-            cook.setDomain(this.domain);
-        }
+        ResponseCookie.ResponseCookieBuilder cookBuilder = ResponseCookie.from(this.cookieName, refreshToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge((int)TimeUnit.DAYS.toSeconds(7L));
+        if(this.domain != null)cookBuilder = cookBuilder.domain(this.domain);
 
-        cook.setSecure(true);
-        cook.setMaxAge((long)((int)TimeUnit.DAYS.toSeconds(7L)));
-        response.addCookie(cook);
+        response.addCookie(cookBuilder.build());
     }
 
     void RemoveCookie(HttpServletRequest request, HttpServletResponse response){
