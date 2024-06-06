@@ -5,7 +5,7 @@ import com.trecapps.auth.webflux.controllers.CookieBase;
 import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.common.models.primary.TrecAccount;
 import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
-import com.trecapps.auth.webflux.services.SessionManagerAsync;
+import com.trecapps.auth.webflux.services.V2SessionManagerAsync;
 import com.trecapps.auth.webflux.services.IUserStorageServiceAsync;
 import com.trecapps.auth.webflux.services.TrecAccountServiceAsync;
 import com.trecapps.auth.webflux.services.TrecSecurityContextReactive;
@@ -48,7 +48,7 @@ public class AuthController //extends CookieControllerBase
     String defaultApp;
 
 
-    SessionManagerAsync sessionManager;
+    V2SessionManagerAsync sessionManager;
 
     IUserStorageServiceAsync userStorageService;
 
@@ -68,7 +68,7 @@ public class AuthController //extends CookieControllerBase
     public AuthController(@Autowired(required = false) CookieBase cookieBase,
                           @Autowired JwtTokenServiceAsync jwtTokenService1,
                           @Autowired IUserStorageServiceAsync userStorageService1,
-                          @Autowired SessionManagerAsync sessionManager1,
+                          @Autowired V2SessionManagerAsync sessionManager1,
                           @Autowired TrecAccountServiceAsync trecAccountService1,
                           @Autowired TrecSecurityContextReactive trecSecurityContextServlet1,
                           @Value("${trecauth.app}") String dApp,
@@ -197,14 +197,13 @@ public class AuthController //extends CookieControllerBase
 
         String sessionId = trecAuth.getSessionId();
 
-        return sessionManager.removeSession(trecAuth.getAccount().getId(), sessionId)
-                .doOnNext((Boolean result) -> {
+        return Mono.just(new ResponseEntity<Void>(HttpStatus.NO_CONTENT))
+                .doOnNext(re -> {
+                    sessionManager.removeSession(trecAuth.getAccount().getId(), sessionId);
                     if(useCookie && cookieBase != null)
                         cookieBase.RemoveCookie(resp, req, trecAuth.getAccount().getId());
                 })
-                .map((Boolean result) -> result ? new ResponseEntity<>(HttpStatus.NO_CONTENT) :
-                        new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
-
+                .onErrorResume((Throwable thrown) -> Mono.just(new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR)));
     }
 
 

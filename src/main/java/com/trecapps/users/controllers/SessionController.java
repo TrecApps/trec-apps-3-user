@@ -1,9 +1,10 @@
 package com.trecapps.users.controllers;
 
-import com.trecapps.auth.common.models.Session;
 import com.trecapps.auth.common.models.SessionList;
+import com.trecapps.auth.common.models.SessionListV2;
+import com.trecapps.auth.common.models.SessionV2;
 import com.trecapps.auth.common.models.TrecAuthentication;
-import com.trecapps.auth.webflux.services.SessionManagerAsync;
+import com.trecapps.auth.webflux.services.V2SessionManagerAsync;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -22,16 +22,21 @@ import java.util.List;
 public class SessionController {
 
     @Autowired
-    SessionManagerAsync sessionManager;
+    V2SessionManagerAsync sessionManager;
 
     Logger logger = LoggerFactory.getLogger(SessionController.class);
 
     @GetMapping("/List")
-    Mono<ResponseEntity<SessionList>> retrieveSessions(Authentication authentication)
+    Mono<ResponseEntity<SessionListV2>> retrieveSessions(Authentication authentication)
     {
         return Mono.just((TrecAuthentication) authentication)
                 .flatMap((TrecAuthentication auth) -> sessionManager.getSessionList(auth.getAccount().getId()))
-                .map((List<Session> sessions) -> ResponseEntity.ok(new SessionList(sessions)));
+                .map((List<SessionV2> sessions) -> {
+                    SessionListV2 ret = new SessionListV2();
+                    ret.setSessions(sessions);
+                    ret.prep();
+                    return ResponseEntity.ok(ret);
+                });
     }
 
     @GetMapping(value = "/Current", produces = MediaType.TEXT_PLAIN_VALUE)
@@ -46,12 +51,8 @@ public class SessionController {
     {
 
         return Mono.just((TrecAuthentication) authentication)
-                .flatMap((TrecAuthentication auth) -> sessionManager.removeSession(auth.getAccount().getId(), session))
-                .map((Boolean worked) -> {
-                    if(worked)
-                        return new ResponseEntity<>("Session Deleted!", HttpStatus.OK);
-                    else return new ResponseEntity<>("Failed to Remove Session!", HttpStatus.INTERNAL_SERVER_ERROR);
-                });
+                .flatMap((TrecAuthentication auth) -> sessionManager.removeSessionMono(auth.getAccount().getId(), session))
+                .thenReturn(ResponseEntity.ok("Removed"));
 
 
     }
