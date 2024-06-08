@@ -148,6 +148,12 @@ public class AuthController //extends CookieControllerBase
                         return new ResponseEntity<LoginToken>(HttpStatus.INTERNAL_SERVER_ERROR);
 
                     TokenTime userToken = userTokenOpt.getFullBody();
+
+                    if(!defaultApp.equals(finalApp))
+                    {
+                        this.sessionManager.setBrand(userTokenOpt.getId(), userToken.getSession(), null, defaultApp, false);
+                    }
+
                     LoginToken ret = new LoginToken();
                     ret.setToken_type("User");
                     ret.setAccess_token(userToken.getToken());
