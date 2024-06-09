@@ -143,34 +143,33 @@ public class AuthController //extends CookieControllerBase
                                     ;
 
                         })
-                .map((IdBodyExtender<TokenTime> userTokenOpt) -> {
+                .flatMap((IdBodyExtender<TokenTime> userTokenOpt) -> {
                     if(userTokenOpt.isEmpty())
-                        return new ResponseEntity<LoginToken>(HttpStatus.INTERNAL_SERVER_ERROR);
-
-                    TokenTime userToken = userTokenOpt.getFullBody();
-
-                    if(!defaultApp.equals(finalApp))
-                    {
-                        this.sessionManager.setBrand(userTokenOpt.getId(), userToken.getSession(), null, defaultApp, false);
-                    }
-
-                    LoginToken ret = new LoginToken();
-                    ret.setToken_type("User");
-                    ret.setAccess_token(userToken.getToken());
-                    TrecAccount account = new TrecAccount();
-                    account.setId(userTokenOpt.getId());
-                    account.setUsername(userTokenOpt.getUserName());
-                    ret.setRefresh_token(this.jwtTokenService.generateRefreshToken(account));
-                    OffsetDateTime exp = userToken.getExpiration();
-                    if(exp != null)
-                        ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
-
-//                    if(useCookie && cookieBase != null) {
-//                        cookieBase.SetCookie(response, ret.getRefresh_token());
-//                    }
+                        return Mono.just(new ResponseEntity<LoginToken>(HttpStatus.INTERNAL_SERVER_ERROR));
+                    TokenTime ut = userTokenOpt.getFullBody();
 
 
-                    return new ResponseEntity<LoginToken>(ret, HttpStatus.OK);
+
+                    Mono<TokenTime> monoRet = defaultApp.equals(finalApp) ? Mono.just(ut) :
+                            this.sessionManager.setBrandMono(userTokenOpt.getId(), ut.getSession(), null, defaultApp, false)
+                                    .then(Mono.just(ut));
+
+                    return monoRet.map((TokenTime userToken) -> {
+                        LoginToken ret = new LoginToken();
+                        ret.setToken_type("User");
+                        ret.setAccess_token(userToken.getToken());
+                        TrecAccount account = new TrecAccount();
+                        account.setId(userTokenOpt.getId());
+                        account.setUsername(userTokenOpt.getUserName());
+                        ret.setRefresh_token(this.jwtTokenService.generateRefreshToken(account));
+                        OffsetDateTime exp = userToken.getExpiration();
+                        if(exp != null)
+                            ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
+
+                        return new ResponseEntity<LoginToken>(ret, HttpStatus.OK);
+                    });
+
+
                 });
 
     }
