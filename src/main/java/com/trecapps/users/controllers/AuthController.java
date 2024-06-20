@@ -161,7 +161,7 @@ public class AuthController //extends CookieControllerBase
                         TrecAccount account = new TrecAccount();
                         account.setId(userTokenOpt.getId());
                         account.setUsername(userTokenOpt.getUserName());
-                        ret.setRefresh_token(this.jwtTokenService.generateRefreshToken(account));
+                        ret.setRefresh_token(this.jwtTokenService.generateRefreshToken(account, userToken.getSession()));
                         OffsetDateTime exp = userToken.getExpiration();
                         if(exp != null)
                             ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());

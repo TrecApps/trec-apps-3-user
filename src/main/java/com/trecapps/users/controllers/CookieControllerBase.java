@@ -41,7 +41,7 @@ public class CookieControllerBase {
 
     void applyCookie(TrecAuthentication trecAuthentication, LoginToken token, ServerHttpResponse response){
 
-        String refreshToken = jwtTokenService.generateRefreshToken(trecAuthentication.getAccount());
+        String refreshToken = jwtTokenService.generateRefreshToken(trecAuthentication.getAccount(), trecAuthentication.getSessionId());
         token.setRefresh_token(refreshToken);
 
         this.SetCookie(response, refreshToken);
