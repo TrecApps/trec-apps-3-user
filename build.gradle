@@ -39,7 +39,7 @@ dependencies {
     // Include the sdk as a dependency
 
     //Enable Trec-Auth
-    implementation 'com.trecapps.auth:TrecAuth:0.6.31'
+    implementation 'com.trecapps.auth:TrecAuth:0.6.32'
     implementation 'com.twilio.sdk:twilio:10.1.5'
 
     // Security Dependencies
