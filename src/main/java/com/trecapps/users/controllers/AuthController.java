@@ -166,6 +166,10 @@ public class AuthController //extends CookieControllerBase
                         if(exp != null)
                             ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
 
+                        if(useCookie && cookieBase != null && login.getStayLoggedIn()){
+                            cookieBase.SetCookie(exchange.getResponse(), ret.getRefresh_token());
+                        }
+
                         return new ResponseEntity<LoginToken>(ret, HttpStatus.OK);
                     });
 
