@@ -42,7 +42,8 @@ public class SecurityConfig {
             "/Users/UserUpdate",
             "/Sessions/**",
             "/Email/**",
-            "/Auth/permissions"
+            "/Auth/permissions",
+            "/refresh_token"
 
     };
 
