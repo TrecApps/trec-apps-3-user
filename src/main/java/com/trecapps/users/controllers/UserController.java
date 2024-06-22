@@ -150,6 +150,13 @@ public class UserController extends CookieControllerBase{
                     user1.setEmailVerified(existingUser.isEmailVerified());
                     user1.setCredibilityRating(existingUser.getCredibilityRating());
 
+                    // Don't allow User to Update the birthday on a whim. If a mistake was made,
+                    // have an employee make the update
+                    user1.setBirthday(existingUser.getBirthday());
+
+                    if(user1.getBirthdaySetting() == null)
+                        user1.setBirthdaySetting(existingUser.getBirthdaySetting());
+
                     // To-Do: continue Checks
 
 
