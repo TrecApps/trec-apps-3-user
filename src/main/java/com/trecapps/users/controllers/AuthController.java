@@ -11,10 +11,7 @@ import com.trecapps.auth.webflux.services.TrecAccountServiceAsync;
 import com.trecapps.auth.webflux.services.TrecSecurityContextReactive;
 import com.trecapps.users.models.IdBodyExtender;
 import com.trecapps.users.models.Login;
-import com.trecapps.users.models.User;
 import com.trecapps.users.models.UserInfo;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,11 +25,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import reactor.netty.http.server.HttpServerRequest;
-import reactor.netty.http.server.HttpServerResponse;
 
 import java.time.OffsetDateTime;
 import java.util.*;

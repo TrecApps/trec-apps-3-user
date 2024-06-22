@@ -13,7 +13,6 @@ import com.trecapps.auth.webflux.services.TrecAccountServiceAsync;
 import com.trecapps.users.models.AuthenticationBody;
 import com.trecapps.users.models.PasswordChange;
 import com.trecapps.users.models.UserPost;
-import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContext;
@@ -29,7 +29,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -60,6 +59,7 @@ public class UserController extends CookieControllerBase{
         this.userService = userService;
         this.userStorageService = userStorageService1;
     }
+
 
 
     Logger logger = LoggerFactory.getLogger(UserController.class);
@@ -131,12 +131,10 @@ public class UserController extends CookieControllerBase{
 
 
     @PutMapping(value = "/UserUpdate", produces = MediaType.TEXT_PLAIN_VALUE)
-    public Mono<ResponseEntity<String>> updateUser(RequestEntity<TcUser> post)
+    public Mono<ResponseEntity<String>> updateUser(RequestEntity<TcUser> post, Authentication a)
     {
         TcUser user = post.getBody();
-        // To-Do: Make sure post id and uer id match
-        SecurityContext context = SecurityContextHolder.getContext();
-        TrecAuthentication auth = (TrecAuthentication) context.getAuthentication();
+        TrecAuthentication auth = (TrecAuthentication) a;
 
         return Mono.just(new AuthenticationBody<TcUser>(auth, user))
                 .map((AuthenticationBody<TcUser> authBody) -> {
@@ -149,6 +147,8 @@ public class UserController extends CookieControllerBase{
                     user1.setRestrictions(existingUser.getRestrictions());
                     user1.setEmailVerified(existingUser.isEmailVerified());
                     user1.setCredibilityRating(existingUser.getCredibilityRating());
+                    user1.setId(existingUser.getId());
+                    user1.setVerificationCodes(existingUser.getVerificationCodes());
 
                     // Don't allow User to Update the birthday on a whim. If a mistake was made,
                     // have an employee make the update

@@ -1,27 +1,29 @@
 //package com.trecapps.users.models;
 //
-//import com.trecapps.auth.models.PhoneNumber;
+//import com.trecapps.auth.common.models.PhoneNumber;
+//import com.trecapps.auth.common.models.TcUser;
 //import lombok.Data;
 //import lombok.NoArgsConstructor;
 //
 //import jakarta.validation.constraints.Email;
 //import java.time.OffsetDateTime;
+//import java.util.List;
 //import java.util.Map;
 //import java.util.Set;
 //import java.util.UUID;
 //
 //@Data
 //@NoArgsConstructor
-//public class TcUser {
+//public class TcUserRet {
 //
-//    public TcUser(UserPost post, String id)
+//    public TcUserRet(UserPost post, String id)
 //    {
 //        this.id = id;
 //
 //        displayName = post.getDisplayName();
-//        post.getBirthday();
-//
-//        birthday = post.getBirthday();
+//        OffsetDateTime b = post.getBirthday();
+//        if(b != null)
+//            birthday = b.toString();
 //        birthdaySetting = "private"; // Assume User does not want their birthday seen by anyone
 //
 //        userProfile = post.getUserPrincipalName();
@@ -35,11 +37,11 @@
 //        credibilityRating = 5;
 //    }
 //
-//    public com.trecapps.auth.models.TcUser getAuthUser()
+//    public TcUser getAuthUser()
 //    {
-//        com.trecapps.auth.models.TcUser ret = new com.trecapps.auth.models.TcUser();
+//        TcUser ret = new TcUser();
 //        ret.setAddress(address);
-//        ret.setBirthday(birthday);
+//        ret.setBirthday(OffsetDateTime.parse(birthday));
 //        ret.setBirthdaySetting(birthdaySetting);
 //        ret.setBrands(brands);
 //        ret.setBrandSettings(brandSettings);
@@ -51,8 +53,7 @@
 //        ret.setEmailVerified(emailVerified);
 //        ret.setId(id);
 //        if(mobilePhone != null) {
-//            var num = new PhoneNumber();
-//            num.setNumber(mobilePhone);
+//            var num = new PhoneNumber(mobilePhone);
 //            ret.setMobilePhone(num);
 //        }
 //        ret.setPhoneVerified(phoneVerified);
@@ -63,7 +64,7 @@
 //        return ret;
 //    }
 //
-//    public static TcUser getUserFromAuthUser(com.trecapps.auth.models.TcUser user)
+//    public static TcUser getUserFromAuthUser(TcUser user)
 //    {
 //        TcUser  ret = new TcUser();
 //        ret.setAddress(user.getAddress());
@@ -80,7 +81,7 @@
 //        ret.setId(user.getId());
 //        var phone = user.getMobilePhone();
 //        if(phone != null)
-//            ret.setMobilePhone(phone.getNumber());
+//            ret.setMobilePhone(phone);
 //        ret.setPhoneVerified(user.isPhoneVerified());
 //        ret.setProfilePic(user.getProfilePic());
 //        ret.setRestrictions(user.getRestrictions());
@@ -109,11 +110,11 @@
 //    OffsetDateTime codeExpiration;
 //
 //    // Birthday
-//    OffsetDateTime birthday;
+//    String birthday;
 //    String birthdaySetting;
 //
 //    // Addresses used by the User
-//    String[] address;
+//    List<String> address;
 //
 //    // External Profiles
 //    Set<String> brands;

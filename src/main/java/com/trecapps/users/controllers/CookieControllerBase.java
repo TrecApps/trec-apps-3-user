@@ -4,10 +4,7 @@ import com.trecapps.auth.webflux.controllers.CookieBase;
 import com.trecapps.auth.common.models.LoginToken;
 import com.trecapps.auth.common.models.TrecAuthentication;
 import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
-import io.netty.handler.codec.http.cookie.DefaultCookie;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,19 +57,6 @@ public class CookieControllerBase {
         response.addCookie(cookBuilder.build());
     }
 
-    void RemoveCookie(HttpServletRequest request, HttpServletResponse response){
-        for(Cookie cook : request.getCookies())
-        {
-            if(cook.getName().equals(cookieBase.getCookieName()))
-            {
-                cook.setValue("");
-                cook.setPath("/");
-                cook.setMaxAge(0);
-                response.addCookie(cook);
-                return;
-            }
-        }
-    }
 
 
 }
