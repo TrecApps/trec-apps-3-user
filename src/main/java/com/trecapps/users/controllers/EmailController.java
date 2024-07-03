@@ -28,7 +28,7 @@ public class EmailController {
         return Mono.just((TrecAuthentication)authentication)
                 .flatMap((TrecAuthentication auth) -> {
                     try {
-                        return emailService.sendValidationEmail(auth.getAccount())
+                        return emailService.sendValidationEmail(auth.getUser())
                                 .map((Boolean worked) -> new ResponseEntity<>(worked ? HttpStatus.NO_CONTENT : HttpStatus.ACCEPTED));
 
 

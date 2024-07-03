@@ -73,15 +73,11 @@ public class TrecSmsService {
                 });
     }
 
-    public void sendCode(TrecAccount account) throws JsonProcessingException {
+    public void sendCode(TcUser account) throws JsonProcessingException {
 
-        userStorageService.getAccountById(account.getId())
-                .doOnNext((Optional<TcUser> optUser) -> {
-                    if(optUser.isEmpty())
-                    {
-                        log.info("User Not Found");
-                    }
-                    TcUser user = optUser.get();
+        Mono.just(account)
+                .doOnNext((TcUser user) -> {
+
                     String code = stateService.generateState();
 
                     Map<String, String> codes = user.getVerificationCodes();
@@ -91,11 +87,13 @@ public class TrecSmsService {
                     codes.put("SMS", code);
                     user.setVerificationCodes(codes);
 
+                    String phoneNumber = user.getMobilePhone().toString();
+
                     userStorageService.saveUser(user);
 
-                    log.info("Sending message to {}", user.getMobilePhone().toString());
+                    log.info("Sending message to {}", phoneNumber);
 
-                    sendCode(code, user.getMobilePhone().toString());
+                    sendCode(code, phoneNumber);
                 }).subscribe();
     }
 

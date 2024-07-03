@@ -32,7 +32,7 @@ public class SmsController {
                     if(trecSmsService == null || !trecSmsService.hasBeenSetUp())
                         return new ResponseEntity(HttpStatus.NOT_IMPLEMENTED);
                     try{
-                        trecSmsService.sendCode(trecAuth.getAccount());
+                        trecSmsService.sendCode(trecAuth.getUser());
                         return new ResponseEntity(HttpStatus.NO_CONTENT);
                     } catch (JsonProcessingException e) {
                         return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);

@@ -60,15 +60,11 @@ public class TrecEmailService
 		return OffsetDateTime.now().isBefore(exp.minusMinutes(9));
 	}
 
-	public Mono<Boolean> sendValidationEmail(TrecAccount account) throws JsonProcessingException, MessagingException {
+	public Mono<Boolean> sendValidationEmail(TcUser account) throws JsonProcessingException, MessagingException {
 
-		return userStorageService.getAccountById(account.getId())
-				.map((Optional<TcUser> optUser) -> {
-					if (optUser.isEmpty()) {
-						log.info("User Not Found");
-						return false;
-					}
-					TcUser user = optUser.get();
+		return Mono.just(account)
+				.map((TcUser user) -> {
+
 					if(isPast1(user))
 						return false;
 
@@ -80,10 +76,14 @@ public class TrecEmailService
 					user.setCurrentCode(code);
 					user.setCodeExpiration(now);
 
+					// Saving the user reverts the email back to its encrypted form
+					// Save the email now, before saving the user wipes it away.
+					String email = user.getEmail();
+
 					userStorageService.saveUser(user);
 
                     try {
-                        sendValidationEmail(user.getEmail(), "Trec-Account: Email Validation", code);
+                        sendValidationEmail(email, "Trec-Account: Email Validation", code);
                     } catch (MessagingException e) {
                         throw new RuntimeException(e);
                     }
