@@ -84,7 +84,7 @@ public class BrandController {
             app = defaultApp;
         TrecAuthentication trecAuth = (TrecAuthentication) SecurityContextHolder.getContext().getAuthentication();
 
-        return brandService.LoginAsBrand(
+        return brandService.loginAsBrand(
                 trecAuth,
                 uuid,
                 request.requestHeaders().get("User-Agent"),

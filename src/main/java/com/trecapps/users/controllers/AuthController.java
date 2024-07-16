@@ -115,7 +115,7 @@ public class AuthController //extends CookieControllerBase
             app = defaultApp;
 
         String finalApp = app;
-        return authService.logInUsername(login.getUsername(), login.getPassword())
+        return authService.logInUsername(login.getUsername(), login.getPassword(), defaultApp)
                 .flatMap((Optional<TrecAccount> accountOpt) -> {
                             if (accountOpt.isEmpty())
                                 throw new ResponseEntityException(null, HttpStatus.UNAUTHORIZED);
@@ -170,24 +170,6 @@ public class AuthController //extends CookieControllerBase
 
                 });
 
-    }
-
-
-//    @PostMapping("/refresh")
-//    public ResponseEntity<LoginToken> refreshCode(@RequestBody String refreshToken, @RequestParam("Redirect")String redirect)
-//    {
-//        // return generateResponse(authService.getTokenFromRefresh(redirect, refreshToken).getBody());
-//        return null;
-//    }
-
-    void clearSessions(String value, String userId) {
-        DecodedJWT decodedJWT = this.jwtTokenService.decodeToken(value);
-        if (decodedJWT != null) {
-            Map<String, String> sessionList = this.jwtTokenService.claims(decodedJWT);
-            sessionList.forEach((_app, s) -> {
-                this.sessionManager.removeSession(userId, s);
-            });
-        }
     }
 
 

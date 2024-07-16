@@ -1,6 +1,5 @@
 package com.trecapps.users.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.trecapps.auth.webflux.controllers.CookieBase;
 import com.trecapps.auth.common.models.LoginToken;
 import com.trecapps.auth.common.models.TcUser;
@@ -21,12 +20,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.server.ServerWebExchange;
