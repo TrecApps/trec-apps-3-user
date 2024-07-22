@@ -73,10 +73,10 @@ public class TrecSmsService {
                 });
     }
 
-    public void sendCode(TcUser account) throws JsonProcessingException {
+    public Mono<String> sendCode(TcUser account) {
 
-        Mono.just(account)
-                .doOnNext((TcUser user) -> {
+        return Mono.just(account)
+                .map((TcUser user) -> {
 
                     String code = stateService.generateState();
 
@@ -94,7 +94,8 @@ public class TrecSmsService {
                     log.info("Sending message to {}", phoneNumber);
 
                     sendCode(code, phoneNumber);
-                }).subscribe();
+                    return code;
+                });
     }
 
     public void sendCode(String code, String phone){

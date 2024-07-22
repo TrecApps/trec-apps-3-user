@@ -32,10 +32,8 @@ public class SmsController {
                     if(trecSmsService == null || !trecSmsService.hasBeenSetUp())
                         return new ResponseEntity(HttpStatus.NOT_IMPLEMENTED);
                     try{
-                        trecSmsService.sendCode(trecAuth.getUser());
+                        trecSmsService.sendCode(trecAuth.getUser()).subscribe();
                         return new ResponseEntity(HttpStatus.NO_CONTENT);
-                    } catch (JsonProcessingException e) {
-                        return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
                     }catch(ApiException e){
                         log.info("Twilio Exception {} with message {}", e.getCode(), e.getMessage());
                         return new ResponseEntity(HttpStatus.BAD_REQUEST);

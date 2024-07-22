@@ -30,7 +30,7 @@ public class TrecEmailService
 	@Autowired
 	StateService stateService;
 
-	public Mono<Boolean> validateEmail(TrecAccount account, String enteredCode) throws JsonProcessingException {
+	public Mono<Boolean> validateEmail(TrecAccount account, String enteredCode) {
 
 		return userStorageService.getAccountById(account.getId())
 				.map((Optional<TcUser> optUser) -> {
@@ -60,13 +60,13 @@ public class TrecEmailService
 		return OffsetDateTime.now().isBefore(exp.minusMinutes(9));
 	}
 
-	public Mono<Boolean> sendValidationEmail(TcUser account) throws JsonProcessingException, MessagingException {
+	public Mono<String> sendValidationEmail(TcUser account) {
 
 		return Mono.just(account)
 				.map((TcUser user) -> {
 
 					if(isPast1(user))
-						return false;
+						return "";
 
 					String code = stateService.generateState();
 
@@ -88,7 +88,7 @@ public class TrecEmailService
                         throw new RuntimeException(e);
                     }
 
-                    return true;
+                    return code;
 				});
 
 

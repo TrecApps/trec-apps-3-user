@@ -26,17 +26,8 @@ public class EmailController {
     public Mono<ResponseEntity<Void>> sendVerificationEmail(Authentication authentication)
     {
         return Mono.just((TrecAuthentication)authentication)
-                .flatMap((TrecAuthentication auth) -> {
-                    try {
-                        return emailService.sendValidationEmail(auth.getUser())
-                                .map((Boolean worked) -> new ResponseEntity<>(worked ? HttpStatus.NO_CONTENT : HttpStatus.ACCEPTED));
-
-
-                    } catch (JsonProcessingException | MessagingException e) {
-                        e.printStackTrace();
-                        return Mono.just(new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
-                    }
-                });
+                .flatMap((TrecAuthentication auth) -> emailService.sendValidationEmail(auth.getUser())
+                        .map((String worked) -> new ResponseEntity<>(!worked.isEmpty() ? HttpStatus.NO_CONTENT : HttpStatus.ACCEPTED)));
 
     }
 
@@ -45,13 +36,10 @@ public class EmailController {
     {
         return Mono.just(new AuthenticationBody<String>((TrecAuthentication)auth, code))
                 .flatMap((AuthenticationBody<String> ab) -> {
-                    try{
+
                         return emailService.validateEmail(ab.getAuthentication().getAccount(), code)
                                 .map((Boolean worked) -> new ResponseEntity<>(worked ? HttpStatus.NO_CONTENT : HttpStatus.BAD_REQUEST));
-                    }catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                        return Mono.just(new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
-                    }
+
                 });
     }
 
