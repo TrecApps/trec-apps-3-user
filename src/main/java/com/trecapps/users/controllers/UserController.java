@@ -1,10 +1,7 @@
 package com.trecapps.users.controllers;
 
+import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.webflux.controllers.CookieBase;
-import com.trecapps.auth.common.models.LoginToken;
-import com.trecapps.auth.common.models.TcUser;
-import com.trecapps.auth.common.models.TokenTime;
-import com.trecapps.auth.common.models.TrecAuthentication;
 import com.trecapps.auth.common.models.primary.TrecAccount;
 import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
 import com.trecapps.auth.webflux.services.IUserStorageServiceAsync;
@@ -139,9 +136,9 @@ public class UserController extends CookieControllerBase{
                     if(!authentication.getAccount().getId().equals(user1.getId()))
                         return new ResponseEntity<String>("Mismatched IDs", HttpStatus.FORBIDDEN);
                     TcUser existingUser = authentication.getUser();
-                    user1.setPhoneVerified(existingUser.isPhoneVerified());
                     user1.setRestrictions(existingUser.getRestrictions());
-                    user1.setEmailVerified(existingUser.isEmailVerified());
+                    assert user != null;
+                    managePhoneAndEmailChanges(user, user1);
                     user1.setCredibilityRating(existingUser.getCredibilityRating());
                     user1.setId(existingUser.getId());
                     user1.setVerificationCodes(existingUser.getVerificationCodes());
@@ -163,6 +160,45 @@ public class UserController extends CookieControllerBase{
                     return new ResponseEntity<>("Success", HttpStatus.OK);
                 });
 
+    }
+
+    void managePhoneAndEmailChanges(TcUser postedUser, TcUser existingUser){
+        if(!areStringsEqual(postedUser.getEmail(), existingUser.getEmail())){
+            existingUser.setEmailVerified(false);
+            existingUser.setEmail(postedUser.getEmail());
+
+            // Since Email is not currently (or no longer) verified, make sure that Email can't be used for MFA
+            existingUser.setMfaMechanisms(
+                    existingUser.getMfaMechanisms()
+                            .stream()
+                            .filter((MfaMechanism mech) -> !mech.getSource().equals("Email"))
+                            .toList()
+            );
+        }
+
+
+        if(!areObjectsEqual(postedUser.getMobilePhone(), existingUser.getMobilePhone())){
+            existingUser.setPhoneVerified(false);
+            existingUser.setMobilePhone(postedUser.getMobilePhone());
+
+            // Since Email is not currently (or no longer) verified, make sure that Email can't be used for MFA
+            existingUser.setMfaMechanisms(
+                    existingUser.getMfaMechanisms()
+                            .stream()
+                            .filter((MfaMechanism mech) -> !mech.getSource().equals("Phone"))
+                            .toList()
+            );
+        }
+    }
+
+    boolean areStringsEqual(String str1, String str2){
+        if(str1 == null) return str2 == null;
+        return str1.trim().equals(str2 == null ? null : str2.trim());
+    }
+
+    boolean areObjectsEqual(Object obj1, Object obj2) {
+        if(obj1 == null) return obj2 == null;
+        return obj1.equals(obj2);
     }
 
     @GetMapping("/Current")

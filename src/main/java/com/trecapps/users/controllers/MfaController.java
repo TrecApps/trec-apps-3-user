@@ -71,6 +71,24 @@ public class MfaController {
 
     }
 
+    @GetMapping("/EnablePhone")
+    Mono<Void> enablePhone(Authentication authentication, ServerHttpResponse response){
+        return convertAuth(authentication)
+                .doOnNext((TrecAuthentication tAuth) -> {
+                    boolean worked = mfaService.enablePhoneVerification(tAuth.getUser());
+                    response.setRawStatusCode(worked ? 202 : 400);
+                }).then();
+    }
+
+    @GetMapping("/EnableEmail")
+    Mono<Void> enableEmail(Authentication authentication, ServerHttpResponse response){
+        return convertAuth(authentication)
+                .doOnNext((TrecAuthentication tAuth) -> {
+                    boolean worked = mfaService.enableEmailVerification(tAuth.getUser());
+                    response.setRawStatusCode(worked ? 202 : 400);
+                }).then();
+    }
+
     @GetMapping("/options")
     Mono<List<String>> getOptions(Authentication authentication)
     {
@@ -83,12 +101,9 @@ public class MfaController {
 
         Optional<MfaMechanism> oMechanism = user.getMechanism(isEmail ? "Email" : "Phone");
         MfaMechanism mechanism = null;
-        if(oMechanism.isEmpty()){
-            mechanism = new MfaMechanism();
-            mechanism.setSource(isEmail ? "Email" : "Phone");
-            mechanisms.add(mechanism);
-        }
-        else mechanism = oMechanism.get();
+        if(oMechanism.isEmpty())return Mono.empty();
+
+        mechanism = oMechanism.get();
 
         mechanism.setCode(code);
         mechanism.setExpires(OffsetDateTime.now().plusMinutes(5));
