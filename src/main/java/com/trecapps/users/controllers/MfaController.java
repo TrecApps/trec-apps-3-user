@@ -1,21 +1,22 @@
 package com.trecapps.users.controllers;
 
-import com.trecapps.auth.common.models.MfaMechanism;
-import com.trecapps.auth.common.models.MfaRegistrationData;
-import com.trecapps.auth.common.models.TcUser;
-import com.trecapps.auth.common.models.TrecAuthentication;
+import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.webflux.services.IUserStorageServiceAsync;
 import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
 import com.trecapps.auth.webflux.services.MfaServiceAsync;
 import com.trecapps.users.models.MfaSubmission;
+import com.trecapps.users.models.ResponseObj;
 import com.trecapps.users.services.TrecEmailService;
 import com.trecapps.users.services.TrecSmsService;
 import dev.samstevens.totp.exceptions.QrGenerationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.core.Authentication;
@@ -32,20 +33,41 @@ import java.util.Optional;
 @Slf4j
 public class MfaController {
 
-    @Autowired
     MfaServiceAsync mfaService;
 
-    @Autowired
     TrecEmailService emailService;
 
-    @Autowired
     IUserStorageServiceAsync userStorageServiceAsync;
 
-    @Autowired(required = false)
     TrecSmsService smsService;
 
-    @Autowired
     JwtTokenServiceAsync jwtTokenServiceAsync;
+
+    List<String> applist;
+
+    String app;
+
+    @Autowired
+    MfaController(
+            MfaServiceAsync mfaService,
+            TrecEmailService emailService,
+            IUserStorageServiceAsync userStorageServiceAsync,
+            @Autowired(required = false)TrecSmsService smsService,
+            JwtTokenServiceAsync jwtTokenServiceAsync,
+            @Value("${trecapps.applist}") String listStr,
+            @Value("${trecauth.app}") String app1
+    ){
+        this.jwtTokenServiceAsync = jwtTokenServiceAsync;
+        this.smsService = smsService;
+        this.mfaService = mfaService;
+        this.emailService = emailService;
+        this.userStorageServiceAsync = userStorageServiceAsync;
+
+        String[] appArray = listStr.split(";");
+        applist = List.of(appArray);
+        this.app = app1;
+        log.info("MFA Controller created!");
+    }
 
 
     Mono<TrecAuthentication> convertAuth(Authentication authentication){
@@ -167,6 +189,41 @@ public class MfaController {
 
 
                 });
+    }
+
+
+    @GetMapping("/appList")
+    Mono<List<String>> getAppList(){
+        return Mono.just(this.applist);
+    }
+
+    @PostMapping("/app")
+    Mono<ResponseEntity<ResponseObj>> setMfaRequirement(@RequestBody MfaReq req, Authentication authentication){
+
+        if(app.equals(req.getApp()) && !req.isRequireMfa())
+            return Mono.just(ResponseObj.getInstance(HttpStatus.FORBIDDEN, "The User Management app requires MFA if enabled"))
+                    .map(ResponseObj::toEntity);
+
+        TrecAuthentication trecAuthentication = (TrecAuthentication) authentication;
+
+
+
+        TcUser user = trecAuthentication.getUser();
+
+        boolean looking = true;
+        for(MfaReq req1 : user.getMfaRequirements()){
+            if(req1.getApp().equals(req.getApp())){
+                looking = false;
+                req1.setRequireMfa(req.isRequireMfa());
+                break;
+            }
+        }
+
+        if(looking)
+            user.getMfaRequirements().add(req);
+
+        return this.userStorageServiceAsync.saveUserMono(user).thenReturn(ResponseObj.getInstance("Success"))
+                .map(ResponseObj::toEntity);
     }
 
 }

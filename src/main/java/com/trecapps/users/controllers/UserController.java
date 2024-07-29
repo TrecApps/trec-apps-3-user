@@ -9,6 +9,7 @@ import com.trecapps.auth.webflux.services.TrecAccountServiceAsync;
 import com.trecapps.users.models.AuthenticationBody;
 import com.trecapps.users.models.PasswordChange;
 import com.trecapps.users.models.UserPost;
+import lombok.extern.log4j.Log4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,11 +139,14 @@ public class UserController extends CookieControllerBase{
                     TcUser existingUser = authentication.getUser();
                     user1.setRestrictions(existingUser.getRestrictions());
                     assert user != null;
+
+                    user1.setMfaMechanisms(existingUser.getMfaMechanisms());
                     managePhoneAndEmailChanges(user, user1);
                     user1.setCredibilityRating(existingUser.getCredibilityRating());
                     user1.setId(existingUser.getId());
                     user1.setVerificationCodes(existingUser.getVerificationCodes());
                     user1.setAuthRoles(existingUser.getAuthRoles());
+                    user1.setMfaRequirements(existingUser.getMfaRequirements());
 
                     // Don't allow User to Update the birthday on a whim. If a mistake was made,
                     // have an employee make the update
@@ -206,7 +210,16 @@ public class UserController extends CookieControllerBase{
     {
         return Mono.just(authentication)
                         .map(auth -> (TrecAuthentication)auth)
-                                .map((trecAuthentication) -> ResponseEntity.ok(trecAuthentication.getUser()));
+                                .map((trecAuthentication) -> {
+                                    TcUser user = trecAuthentication.getUser();
+                                    user.getMfaMechanisms().forEach((MfaMechanism mech) -> {
+                                        mech.setUserCode(null);
+                                        mech.setCode(null);
+                                        mech.setExpires(null);
+                                    });
+                                    return user;
+                                })
+                        .map(ResponseEntity::ok);
 
     }
 
