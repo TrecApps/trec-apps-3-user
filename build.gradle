@@ -39,7 +39,7 @@ dependencies {
     // Include the sdk as a dependency
 
     //Enable Trec-Auth
-    implementation 'com.trecapps.auth:TrecAuth:0.7.01'
+    implementation 'com.trecapps.auth:TrecAuth:0.7.04'
     implementation 'com.twilio.sdk:twilio:10.1.5'
     implementation 'dev.samstevens.totp:totp:1.7.1'  // MFA Support
     implementation 'commons-net:commons-net:3.11.1'  // Address known vulnerability in the samstevens dependency above
