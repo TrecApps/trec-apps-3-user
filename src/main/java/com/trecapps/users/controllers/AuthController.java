@@ -104,6 +104,15 @@ public class AuthController //extends CookieControllerBase
                 });
     }
 
+    boolean isMfaRequired(TcUser user, String app) {
+        for(MfaReq req: user.getMfaRequirements())
+        {
+            if(app.equals(req.getApp()))
+                return req.isRequireMfa();
+        }
+        return false;
+    }
+
     @SneakyThrows
     @PostMapping("/login")
     public Mono<ResponseEntity<LoginToken>> login(
@@ -139,7 +148,7 @@ public class AuthController //extends CookieControllerBase
                         })
                 .flatMap((IdBodyExtender<TokenTime> userTokenOpt) -> {
                     if(userTokenOpt.isEmpty())
-                        return Mono.just(new ResponseEntity<LoginToken>(HttpStatus.INTERNAL_SERVER_ERROR));
+                        return Mono.just(new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
                     TokenTime ut = userTokenOpt.getFullBody();
 
 
@@ -148,8 +157,9 @@ public class AuthController //extends CookieControllerBase
                             this.sessionManager.setBrandMono(userTokenOpt.getId(), ut.getSession(), null, defaultApp, false)
                                     .then(Mono.just(ut));
 
-                    return monoRet.map((TokenTime userToken) -> {
+                    return monoRet.flatMap((TokenTime userToken) -> {
                         LoginToken ret = new LoginToken();
+
                         ret.setToken_type("User");
                         ret.setAccess_token(userToken.getToken());
                         TrecAccount account = new TrecAccount();
@@ -164,7 +174,19 @@ public class AuthController //extends CookieControllerBase
                             cookieBase.SetCookie(exchange.getResponse(), ret.getRefresh_token());
                         }
 
-                        return new ResponseEntity<LoginToken>(ret, HttpStatus.OK);
+                        return userStorageService.getAccountById(account.getId())
+                                .map((Optional<TcUser> oUser) -> {
+                                    if(oUser.isEmpty()) return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+
+                                    TcUser user = oUser.get();
+                                    if(isMfaRequired(user, finalApp)){
+                                        ret.setToken_type("User-requires_mfa");
+                                    }
+
+                                    return ResponseEntity.ok(ret);
+                                });
+
+
                     });
 
 

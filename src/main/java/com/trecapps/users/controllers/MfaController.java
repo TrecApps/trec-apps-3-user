@@ -118,6 +118,19 @@ public class MfaController {
                 .map((TrecAuthentication auth) -> mfaService.getAvailableMFAOptions(auth.getUser()));
     }
 
+    boolean assertMfaRequired(TcUser user){
+        for(MfaReq req: user.getMfaRequirements()){
+            if(app.equals(req.getApp()))
+                return false;
+        }
+
+        MfaReq req = new MfaReq();
+        req.setApp(app);
+        req.setRequireMfa(true);
+        user.getMfaRequirements().add(req);
+        return true;
+    }
+
     Mono<Void> setCodeOnUser(TcUser user, boolean isEmail, String code){
         List<MfaMechanism> mechanisms = user.getMfaMechanisms();
 
@@ -129,6 +142,9 @@ public class MfaController {
 
         mechanism.setCode(code);
         mechanism.setExpires(OffsetDateTime.now().plusMinutes(5));
+
+        assertMfaRequired(user);
+
         return Mono.just(user)
                 .flatMap((TcUser u) -> userStorageServiceAsync.saveUserMono(u));
     }
@@ -184,9 +200,15 @@ public class MfaController {
                         return "";
                     }
                     auth.getLoginToken();
-                    return jwtTokenServiceAsync.addMfa(request.getHeaders().getFirst("Authorization")).getToken();
+                    String ret = jwtTokenServiceAsync
+                            .addMfa(request.getHeaders().getFirst("Authorization"))
+                            .getToken();
 
 
+                    if(assertMfaRequired(user)){
+                        this.userStorageServiceAsync.saveUserMono(user).subscribe();
+                    }
+                    return ret;
 
                 });
     }
@@ -195,6 +217,24 @@ public class MfaController {
     @GetMapping("/appList")
     Mono<List<String>> getAppList(){
         return Mono.just(this.applist);
+    }
+
+    @DeleteMapping("/Token")
+    Mono<ResponseEntity<ResponseObj>> removeToken(Authentication auth){
+        return convertAuth(auth)
+                .flatMap((TrecAuthentication tAuth) -> {
+                    TcUser user = tAuth.getUser();
+
+                    user.setMfaMechanisms(
+                            user.getMfaMechanisms()
+                                    .stream()
+                                    .filter((MfaMechanism m) -> !"Token".equals(m.getSource()))
+                                    .toList()
+                    );
+                    return userStorageServiceAsync.saveUserMono(user);
+                })
+                .thenReturn(ResponseObj.getInstance("Success"))
+                .map(ResponseObj::toEntity);
     }
 
     @PostMapping("/app")
