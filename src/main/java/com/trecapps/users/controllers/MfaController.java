@@ -83,7 +83,7 @@ public class MfaController {
                     String code = mfaService.setUpKey(tAuth.getUser());
                     assert(code != null);
                     try {
-                        return mfaService.getQRCode(tAuth.getUser());
+                        return mfaService.getQRCode(tAuth.getUser(), code);
                     } catch (QrGenerationException e) {
                         log.error("Error generating QR Code!", e);
                         response.setRawStatusCode(500);
