@@ -7,11 +7,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
+import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
+import org.springframework.security.web.server.util.matcher.NegatedServerWebExchangeMatcher;
 
 @EnableWebFluxSecurity
 @Configuration
@@ -26,6 +31,7 @@ public class SecurityConfig {
         //aadAuthProps.setRedirectUriTemplate("http://localhost:4200/api");
         trecAccountService = trecAccountService1;
         trecSecurityContext = trecSecurityContext1;
+        this.trecAuthManagerReactive = trecAuthManagerReactive;
     }
     TrecAccountServiceAsync trecAccountService;
     TrecSecurityContextReactive trecSecurityContext;
@@ -38,7 +44,8 @@ public class SecurityConfig {
             "/Sessions/**",
             "/Email/**",
             "/Auth/permissions",
-            "/refresh_token"
+            "/refresh_token",
+            "/mfa/**"
 
     };
 
@@ -54,16 +61,28 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(
             ServerHttpSecurity http) {
+        //AuthenticationWebFilter authenticationWebFilter = new AuthenticationWebFilter(trecAuthManagerReactive);
+
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+                .logout(ServerHttpSecurity.LogoutSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(restrictedEndpoints).authenticated()
                         .pathMatchers(verifiedEndpoints).hasAuthority("TREC_VERIFIED")
                         .anyExchange().permitAll())
+                .addFilterAt(authenticationWebFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
                 .authenticationManager(trecAuthManagerReactive)
                 .securityContextRepository(trecSecurityContext)
 
                 .build();
+    }
+
+    private AuthenticationWebFilter authenticationWebFilter() {
+        AuthenticationWebFilter authenticationWebFilter = new AuthenticationWebFilter(trecAuthManagerReactive);
+
+        return authenticationWebFilter;
     }
 
 }
