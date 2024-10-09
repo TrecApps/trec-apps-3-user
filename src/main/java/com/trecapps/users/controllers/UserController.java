@@ -180,10 +180,34 @@ public class UserController extends CookieControllerBase{
             );
         }
 
+        if(!areStringsEqual(postedUser.getProposedEmail(), existingUser.getVerifiedEmail())){
+            existingUser.setProposedEmail(postedUser.getProposedEmail());
+
+            // Since Email is not currently (or no longer) verified, make sure that Email can't be used for MFA
+            existingUser.setMfaMechanisms(
+                    existingUser.getMfaMechanisms()
+                            .stream()
+                            .filter((MfaMechanism mech) -> !mech.getSource().equals("Email"))
+                            .toList()
+            );
+        }
+
 
         if(!areObjectsEqual(postedUser.getMobilePhone(), existingUser.getMobilePhone())){
             existingUser.setPhoneVerified(false);
             existingUser.setMobilePhone(postedUser.getMobilePhone());
+
+            // Since Email is not currently (or no longer) verified, make sure that Email can't be used for MFA
+            existingUser.setMfaMechanisms(
+                    existingUser.getMfaMechanisms()
+                            .stream()
+                            .filter((MfaMechanism mech) -> !mech.getSource().equals("Phone"))
+                            .toList()
+            );
+        }
+
+        if(!areObjectsEqual(postedUser.getProposedNumber(), existingUser.getVerifiedNumber())){
+            existingUser.setProposedNumber(postedUser.getProposedNumber());
 
             // Since Email is not currently (or no longer) verified, make sure that Email can't be used for MFA
             existingUser.setMfaMechanisms(

@@ -64,7 +64,15 @@ public class TrecSmsService {
                     // To-Do: Add Expiration Map in future build of TrecAuth and use here
                     if(enteredCode.equals(codes.get("SMS")))
                     {
+                        // Old System
                         user.setPhoneVerified(true);
+                        // New System
+                        com.trecapps.auth.common.models.PhoneNumber number = user.getProposedNumber();
+                        if(number == null)
+                            number = user.getMobilePhone();
+                        user.setVerifiedNumber(number);
+
+
                         userStorageService.saveUser(user);
                         return true;
                     }
@@ -87,7 +95,11 @@ public class TrecSmsService {
                     codes.put("SMS", code);
                     user.setVerificationCodes(codes);
 
-                    String phoneNumber = user.getMobilePhone().toString();
+                    com.trecapps.auth.common.models.PhoneNumber number = user.getProposedNumber();
+                    if(number == null)
+                        number = user.getMobilePhone();
+
+                    String phoneNumber = number.toString();
 
                     userStorageService.saveUser(user);
 

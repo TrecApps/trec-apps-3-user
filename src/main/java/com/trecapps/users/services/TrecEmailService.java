@@ -44,7 +44,14 @@ public class TrecEmailService
 						return false;
 					if(enteredCode.equals(user.getCurrentCode()) && OffsetDateTime.now().isBefore(user.getCodeExpiration()))
 					{
+						// Old System
 						user.setEmailVerified(true);
+
+						// New System
+						if(user.getProposedEmail() != null)
+							user.setVerifiedEmail(user.getProposedEmail());
+						else user.setVerifiedEmail(user.getEmail());
+
 						userStorageService.saveUser(user);
 						return true;
 					}
@@ -78,7 +85,11 @@ public class TrecEmailService
 
 					// Saving the user reverts the email back to its encrypted form
 					// Save the email now, before saving the user wipes it away.
-					String email = user.getEmail();
+					String email = user.getProposedEmail();
+
+					// Fallback for compatibility
+					if(email == null)
+						email = user.getEmail();
 
 					userStorageService.saveUser(user);
 
