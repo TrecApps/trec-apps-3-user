@@ -148,6 +148,9 @@ public class UserController extends CookieControllerBase{
                     user1.setAuthRoles(existingUser.getAuthRoles());
                     user1.setMfaRequirements(existingUser.getMfaRequirements());
 
+                    user1.setSubscriptionId(existingUser.getSubscriptionId());
+                    user1.setAddressList(existingUser.getAddressList());
+
                     // Don't allow User to Update the birthday on a whim. If a mistake was made,
                     // have an employee make the update
                     user1.setBirthday(existingUser.getBirthday());
@@ -167,6 +170,11 @@ public class UserController extends CookieControllerBase{
     }
 
     void managePhoneAndEmailChanges(TcUser postedUser, TcUser existingUser){
+        // For the new system, do not update the verified email/phone here
+        postedUser.setVerifiedEmail(existingUser.getVerifiedEmail());
+        postedUser.setVerifiedNumber(existingUser.getVerifiedNumber());
+        postedUser.setPastEmails(existingUser.getPastEmails());
+
         if(!areStringsEqual(postedUser.getEmail(), existingUser.getEmail())){
             existingUser.setEmailVerified(false);
             existingUser.setEmail(postedUser.getEmail());
