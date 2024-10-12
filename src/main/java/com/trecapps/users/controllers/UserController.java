@@ -1,5 +1,6 @@
 package com.trecapps.users.controllers;
 
+import com.trecapps.auth.common.encryptors.IFieldEncryptor;
 import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.webflux.controllers.CookieBase;
 import com.trecapps.auth.common.models.primary.TrecAccount;
@@ -36,6 +37,9 @@ public class UserController extends CookieControllerBase{
     TrecAccountServiceAsync userService;
 
     IUserStorageServiceAsync userStorageService;
+
+    @Autowired
+    IFieldEncryptor encryptor;
 
 
     @Value("${trecauth.app}") String defaultApp;
@@ -251,7 +255,7 @@ public class UserController extends CookieControllerBase{
         }
 
         if(callibrate)
-            return userStorageService.saveUserMono(user).thenReturn(user);
+            return userStorageService.saveUserMono(user).thenReturn(user).doOnNext((TcUser user1) -> encryptor.decrypt(user1));
         return Mono.just(user);
     }
 
