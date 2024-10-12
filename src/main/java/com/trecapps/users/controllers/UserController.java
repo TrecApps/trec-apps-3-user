@@ -123,7 +123,6 @@ public class UserController extends CookieControllerBase{
 
     }
 
-
     @PutMapping(value = "/UserUpdate", produces = MediaType.TEXT_PLAIN_VALUE)
     public Mono<ResponseEntity<String>> updateUser(RequestEntity<TcUser> post, Authentication a)
     {
@@ -237,20 +236,40 @@ public class UserController extends CookieControllerBase{
         return obj1.equals(obj2);
     }
 
+    Mono<TcUser> callibrateUser(TcUser user) {
+        boolean callibrate = false;
+        if(user.isEmailVerified() && user.getVerifiedEmail() == null){
+            callibrate = true;
+            user.setProposedEmail(user.getEmail());
+            user.setVerifiedEmail(user.getEmail());
+        }
+
+        if(user.isPhoneVerified() && user.getVerifiedNumber() == null){
+            callibrate = true;
+            user.setProposedEmail(user.getEmail());
+            user.setVerifiedEmail(user.getEmail());
+        }
+
+        if(callibrate)
+            return userStorageService.saveUserMono(user).thenReturn(user);
+        return Mono.just(user);
+    }
+
     @GetMapping("/Current")
     public Mono<ResponseEntity<TcUser>> getUser(Authentication authentication)
     {
         return Mono.just(authentication)
                         .map(auth -> (TrecAuthentication)auth)
-                                .map((trecAuthentication) -> {
+                        .flatMap((trecAuthentication) -> {
                                     TcUser user = trecAuthentication.getUser();
                                     user.getMfaMechanisms().forEach((MfaMechanism mech) -> {
                                         mech.setUserCode(null);
                                         mech.setCode(null);
                                         mech.setExpires(null);
                                     });
-                                    return user;
-                                })
+                                    return callibrateUser(user);
+                        })
+
                         .map(ResponseEntity::ok);
 
     }
