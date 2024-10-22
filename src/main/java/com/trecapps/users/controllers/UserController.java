@@ -152,6 +152,7 @@ public class UserController extends CookieControllerBase{
                     user1.setMfaRequirements(existingUser.getMfaRequirements());
 
                     user1.setSubscriptionId(existingUser.getSubscriptionId());
+                    user1.setCustomerId(existingUser.getCustomerId());
                     user1.setAddressList(existingUser.getAddressList());
 
                     // Don't allow User to Update the birthday on a whim. If a mistake was made,
