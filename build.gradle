@@ -4,6 +4,10 @@ plugins {
     id 'jacoco'
 }
 
+ext {
+    springbootVersion = '3.2.5'
+}
+
 apply plugin: 'java'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'jacoco'
@@ -40,21 +44,21 @@ dependencies {
 
     //Enable Trec-Auth
     implementation 'com.trecapps.auth:TrecAuth:0.8.01'
-    implementation 'com.twilio.sdk:twilio:10.1.5'
+    implementation 'com.twilio.sdk:twilio:10.6.1'
     implementation 'dev.samstevens.totp:totp:1.7.1'  // MFA Support
     implementation 'commons-net:commons-net:3.11.1'  // Address known vulnerability in the samstevens dependency above
     implementation 'com.beust:jcommander:1.78'      // Address known vulnerability in the samstevens dependency above
 
     // Security Dependencies
-    implementation 'org.springframework.boot:spring-boot-starter-security:3.2.5'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client:3.2.5'
+    implementation "org.springframework.boot:spring-boot-starter-security:3.2.5"
+    implementation "org.springframework.boot:spring-boot-starter-oauth2-client:3.2.5"
 
 
     // Azure Logging
     implementation "com.microsoft.azure:applicationinsights-runtime-attach:3.4.19"
 
     // Storage
-    implementation 'com.azure:azure-storage-blob:+'
+    implementation 'com.azure:azure-storage-blob:12.28.1'
     implementation 'software.amazon.awssdk:s3:2.25.56'
 
     // Spring Boot features
@@ -83,10 +87,10 @@ dependencies {
     implementation 'com.auth0:java-jwt:+'
     implementation 'org.bouncycastle:bcpkix-jdk18on:1.78.1'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:+'
-    implementation "com.azure.spring:spring-cloud-azure-starter-keyvault:5.11.0"
+    implementation "com.azure.spring:spring-cloud-azure-starter-keyvault:5.17.0"
     implementation 'software.amazon.awssdk:secretsmanager:2.25.56'
 
-    implementation platform('com.google.cloud:libraries-bom:26.38.0')
+    implementation platform('com.google.cloud:libraries-bom:26.49.0')
     implementation 'com.google.cloud:google-cloud-storage'      // Use GCP Cloud Storage for Storage
     implementation 'com.google.cloud:google-cloud-secretmanager:2.42.0'         // Getting Secret info from GCP Secret Manager
 
@@ -94,6 +98,11 @@ dependencies {
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+
+
+    // Vulnerability mitigation
+    implementation "commons-io:commons-io:2.14.0"
+    implementation "com.azure:azure-identity:1.14.0"
 }
 
 test {
