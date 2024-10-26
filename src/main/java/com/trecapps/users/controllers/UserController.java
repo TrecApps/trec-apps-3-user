@@ -90,6 +90,12 @@ public class UserController extends CookieControllerBase{
                     TrecAccount newAccount = newAccountOpt.get();
                     TcUser user = post.getBody().GetTcUserObject();
                     user.setId(newAccount.getId());
+
+                    // Maintain compatibility
+                    user.setProposedEmail(user.getEmail());
+                    user.setProposedNumber(user.getMobilePhone());
+                    user.setAddressList(new AddressList());
+
                     userStorageService.saveUser(user);
 
 
