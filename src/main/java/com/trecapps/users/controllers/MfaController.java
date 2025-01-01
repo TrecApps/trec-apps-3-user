@@ -1,6 +1,7 @@
 package com.trecapps.users.controllers;
 
 import com.trecapps.auth.common.models.*;
+import com.trecapps.auth.webflux.services.FailedLoginServiceAsync;
 import com.trecapps.auth.webflux.services.IUserStorageServiceAsync;
 import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
 import com.trecapps.auth.webflux.services.MfaServiceAsync;
@@ -43,6 +44,8 @@ public class MfaController {
 
     JwtTokenServiceAsync jwtTokenServiceAsync;
 
+    FailedLoginServiceAsync failedLoginServiceAsync;
+
     List<String> applist;
 
     String app;
@@ -53,11 +56,13 @@ public class MfaController {
             TrecEmailService emailService,
             IUserStorageServiceAsync userStorageServiceAsync,
             @Autowired(required = false)TrecSmsService smsService,
+            @Autowired FailedLoginServiceAsync failedLoginServiceAsync1,
             JwtTokenServiceAsync jwtTokenServiceAsync,
             @Value("${trecapps.applist}") String listStr,
             @Value("${trecauth.app}") String app1
     ){
         this.jwtTokenServiceAsync = jwtTokenServiceAsync;
+        this.failedLoginServiceAsync = failedLoginServiceAsync1;
         this.smsService = smsService;
         this.mfaService = mfaService;
         this.emailService = emailService;
@@ -197,6 +202,10 @@ public class MfaController {
                     if(!valid)
                     {
                         response.setStatusCode(HttpStatusCode.valueOf(400));
+
+                        this.failedLoginServiceAsync.appendFailedLogin(user.getId())
+                                .subscribe();
+
                         return "";
                     }
                     auth.getLoginToken();
