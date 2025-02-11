@@ -81,16 +81,20 @@ public class MfaController {
     }
 
     @GetMapping("/register")
-    Mono<MfaRegistrationData> getToken(Authentication authentication, ServerHttpResponse response)
+    Mono<MfaRegistrationData> getToken(Authentication authentication, ServerHttpResponse response, @RequestParam(required = false) String name)
     {
         return convertAuth(authentication)
                 .map((TrecAuthentication tAuth) -> {
-                    String code = mfaService.setUpKey(tAuth.getUser());
-                    assert(code != null);
                     try {
+                        TokenResult code = mfaService.setUpKey(tAuth.getUser(), name);
+                        assert(code != null);
                         return mfaService.getQRCode(tAuth.getUser(), code);
                     } catch (QrGenerationException e) {
                         log.error("Error generating QR Code!", e);
+                        response.setRawStatusCode(500);
+                        return new MfaRegistrationData("", "");
+                    } catch(IllegalArgumentException e) {
+                        log.error("Error with argumentation in Token generation!", e);
                         response.setRawStatusCode(500);
                         return new MfaRegistrationData("", "");
                     }
@@ -187,7 +191,7 @@ public class MfaController {
                     TcUser user = auth.getUser();
 
                     if("Token".equals(submission.getType())){
-                        valid = mfaService.verifyTotp(submission.getCode(), user);
+                        valid = mfaService.verifyTotp(submission.getCode(), submission.getName(), user);
                     } else {
                         Optional<MfaMechanism> oMechanism = user.getMechanism(submission.getType());
                         if(oMechanism.isEmpty())
@@ -229,7 +233,7 @@ public class MfaController {
     }
 
     @DeleteMapping("/Token")
-    Mono<ResponseEntity<ResponseObj>> removeToken(Authentication auth){
+    Mono<ResponseEntity<ResponseObj>> removeToken(Authentication auth, @RequestParam String name){
         return convertAuth(auth)
                 .flatMap((TrecAuthentication tAuth) -> {
                     TcUser user = tAuth.getUser();
@@ -237,7 +241,7 @@ public class MfaController {
                     user.setMfaMechanisms(
                             user.getMfaMechanisms()
                                     .stream()
-                                    .filter((MfaMechanism m) -> !"Token".equals(m.getSource()))
+                                    .filter((MfaMechanism m) -> !"Token".equals(m.getSource()) || !name.equals(m.getName()))
                                     .toList()
                     );
                     return userStorageServiceAsync.saveUserMono(user);

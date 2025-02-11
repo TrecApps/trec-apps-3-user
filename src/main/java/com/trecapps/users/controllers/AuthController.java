@@ -246,7 +246,15 @@ public class AuthController //extends CookieControllerBase
                                           return r;
                                       });
                           }
-                          return Mono.just(r);
+                          return Mono.just(r).doOnNext((UserInfo ui) -> {
+                              TcUser u = ui.getUser();
+                              if(u == null) return;
+                              u.getMfaMechanisms().forEach((MfaMechanism mech) ->{
+                                  mech.setUserCode(null);
+                                  mech.setCode(null);
+                                  mech.setExpires(null);
+                              });
+                          });
                         }).map(ResponseEntity::ok);
 
     }

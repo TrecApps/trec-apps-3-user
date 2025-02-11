@@ -1,11 +1,11 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.1'
+    id 'org.springframework.boot' version '3.4.2'
     id 'jacoco'
 }
 
 ext {
-    springbootVersion = '3.4.1'
+    springbootVersion = '3.4.2'
 }
 
 apply plugin: 'java'
@@ -43,7 +43,7 @@ dependencies {
     // Include the sdk as a dependency
 
     //Enable Trec-Auth
-    implementation 'com.trecapps.auth:TrecAuth:0.9.00'
+    implementation 'com.trecapps.auth:TrecAuth:0.9.15-alpha'
     implementation 'com.twilio.sdk:twilio:10.6.1'
     implementation 'dev.samstevens.totp:totp:1.7.1'  // MFA Support
     implementation 'commons-net:commons-net:3.11.1'  // Address known vulnerability in the samstevens dependency above
@@ -51,7 +51,6 @@ dependencies {
 
     // Security Dependencies
     implementation "org.springframework.boot:spring-boot-starter-security:$springbootVersion"
-    implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springbootVersion"
 
 
     // Azure Logging
@@ -67,8 +66,12 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux:$springbootVersion") {
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
     }
+    implementation "org.springframework.boot:spring-boot-starter-quartz:$springbootVersion"
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springbootVersion"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springbootVersion"
+    implementation 'com.zaxxer:HikariCP:6.2.1' // Used to resolve java.lang.AbstractMethodError: Receiver class
+                                                // com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory
+
     implementation "org.springframework.boot:spring-boot-starter-mail:$springbootVersion"
     implementation "org.springframework.boot:spring-boot-starter-validation:$springbootVersion"
 
