@@ -7,5 +7,6 @@ public class MfaSubmission {
 
     String code;
     String type;
+    String name;
 
 }

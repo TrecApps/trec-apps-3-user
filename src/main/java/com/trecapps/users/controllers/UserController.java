@@ -273,12 +273,14 @@ public class UserController extends CookieControllerBase{
                         .map(auth -> (TrecAuthentication)auth)
                         .flatMap((trecAuthentication) -> {
                                     TcUser user = trecAuthentication.getUser();
-                                    user.getMfaMechanisms().forEach((MfaMechanism mech) -> {
-                                        mech.setUserCode(null);
-                                        mech.setCode(null);
-                                        mech.setExpires(null);
+
+                                    return callibrateUser(user).doOnNext((TcUser u) -> {
+                                        u.getMfaMechanisms().forEach((MfaMechanism mech) -> {
+                                            mech.setUserCode(null);
+                                            mech.setCode(null);
+                                            mech.setExpires(null);
+                                        });
                                     });
-                                    return callibrateUser(user);
                         })
 
                         .map(ResponseEntity::ok);
