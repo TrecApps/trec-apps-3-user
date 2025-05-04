@@ -100,7 +100,12 @@ public class UserController extends CookieControllerBase{
 
 
 
-                    return jwtTokenService.generateToken(newAccount, exchange.getRequest().getHeaders().get("User-Agent").get(0), null, false, defaultApp);
+                    return jwtTokenService.generateToken(
+                            newAccount,
+                            exchange.getRequest().getHeaders().get("User-Agent").get(0),
+                            null,
+                            defaultApp,
+                            new TokenOptions());
                 }).map((Optional<TokenTime> userTokenOpt) -> {
                     if(userTokenOpt.isEmpty())
                         return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);

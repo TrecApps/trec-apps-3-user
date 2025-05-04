@@ -113,6 +113,17 @@ public class AuthController //extends CookieControllerBase
         return false;
     }
 
+    boolean needsMfa(String app, TcUser user) {
+        List<MfaReq> reqs = user.getMfaRequirements();
+        if(reqs == null) return false;
+
+        for(MfaReq req: reqs){
+            if(app.equals(req.getApp()))
+                return req.isRequireMfa();
+        }
+        return false;
+    }
+
     @SneakyThrows
     @PostMapping("/login")
     public Mono<ResponseEntity<LoginToken>> login(
@@ -134,16 +145,25 @@ public class AuthController //extends CookieControllerBase
                             if (account.getId() == null)
                                 throw new ResponseEntityException(null, HttpStatus.FORBIDDEN);
 
-                            return jwtTokenService
-                                    .generateToken(
-                                            account,
-                                            exchange.getRequest().getHeaders().get("User-Agent").get(0),
-                                            null,
-                                            !Boolean.TRUE.equals(login.getStayLoggedIn()),
-                                            finalApp)
-                                    .map((Optional<TokenTime> tt) ->
+
+
+
+                            return userStorageService.getAccountById(account.getId())
+                                    .flatMap((Optional<TcUser> optUser) -> {
+                                        TcUser user = optUser.get();
+                                        TokenOptions options = new TokenOptions();
+                                        options.setExpires(!Boolean.TRUE.equals(login.getStayLoggedIn()));
+                                        options.setNeedsMfa(isMfaRequired(user, finalApp));
+                                        return jwtTokenService.generateToken(
+                                                account,
+                                                exchange.getRequest().getHeaders().get("User-Agent").get(0),
+                                                null,
+                                                finalApp,
+                                                options);
+                                    }).map((Optional<TokenTime> tt) ->
                                             tt.<IdBodyExtender<TokenTime>>map(tokenTime -> new IdBodyExtender<>(tokenTime, account.getId(), account.getUsername())).orElseGet(() -> new IdBodyExtender<>(account.getId(), account.getUsername())))
                                     ;
+
 
                         })
                 .flatMap((IdBodyExtender<TokenTime> userTokenOpt) -> {
@@ -214,48 +234,96 @@ public class AuthController //extends CookieControllerBase
     }
 
 
+    String maskEmail(String email){
+        if(email == null) return "profile@example.com";
+
+        String[] pieces = email.split("@", 2);
+
+        if(pieces[0].length() > 3)
+            pieces[0] = pieces[0].substring(0, 3) + "xxxx";
+        else pieces[0] = pieces[0] + "xxxx";
+        return pieces[0] + "@" + pieces[1];
+    }
+
+    PhoneNumber maskNumber(PhoneNumber number){
+        if(number == null) return null;
+
+        String rawNumber = number.getNumber();
+        StringBuilder newNumber = new StringBuilder();
+        for(int c = 0; c < rawNumber.length() - 1; c++){
+            newNumber.append(c < rawNumber.length() - 5 ? '0' : rawNumber.charAt(c));
+        }
+
+        number.setNumber(Long.parseLong(newNumber.toString()));
+        return number;
+
+    }
 
     @SneakyThrows
     @GetMapping("/User")
     Mono<ResponseEntity<UserInfo>> getUserInfo(Authentication authentication)
     {
         TrecAuthentication authentication1 = (TrecAuthentication) authentication;
-        TrecAccount account = authentication1.getAccount();
-
-        UUID brandUuid = authentication1.getBrandId();
-
-        String brandId = brandUuid == null ? null : brandUuid.toString();
 
         UserInfo ret = new UserInfo();
 
+        TcBrands brands = authentication1.getBrand();
+        TcUser user = authentication1.getUser();
+        ret.setUser(user);
+        ret.setBrand(brands);
+
         return Mono.just(ret)
                         .flatMap((UserInfo r) -> {
-                            return userStorageService.getAccountById(account.getId())
-                                    .map((Optional<TcUser> oUser) -> {
-                                        if(oUser.isPresent())
-                                            r.setUser(oUser.get());
-                                        return r;
-                                    });
-                        }).flatMap((UserInfo r) -> {
-                          if(brandId != null)
-                          {
-                              return userStorageService.getBrandById(brandId)
-                                      .map((Optional<TcBrands> oBrand) -> {
-                                          if(oBrand.isPresent())
-                                              r.setBrand(oBrand.get());
-                                          return r;
-                                      });
-                          }
+
                           return Mono.just(r).doOnNext((UserInfo ui) -> {
                               TcUser u = ui.getUser();
                               if(u == null) return;
+
                               u.getMfaMechanisms().forEach((MfaMechanism mech) ->{
                                   mech.setUserCode(null);
                                   mech.setCode(null);
                                   mech.setExpires(null);
                               });
                           });
-                        }).map(ResponseEntity::ok);
+                        })
+                .doOnNext((UserInfo retInfo) -> {
+                    if(authentication1.isNeedsMfa()){
+                        retInfo.setBrand(null);
+                        TcUser user1 = retInfo.getUser();
+                        user1.setCredibilityRating(0);
+                        user1.setAddress(new ArrayList<>());
+                        user1.setAuthRoles(new ArrayList<>());
+                        user1.setBirthday(OffsetDateTime.now());
+                        user1.setBirthdaySetting("PRIVATE");
+                        user1.setBrands(new HashSet<>());
+                        user1.setBrandSettings(new HashMap<>());
+                        user1.setCodeExpiration(OffsetDateTime.now());
+                        user1.setAddressList(new AddressList());
+                        user1.setCustomerId(null);
+                        user1.setDisplayName("");
+                        user1.setVerificationCodes(new HashMap<>());
+                        user1.setUserProfile("");
+                        user1.setRestrictions("");
+                        user1.setProposedEmail(null);
+                        user1.setProfilePics(new HashMap<>());
+                        user1.setProposedNumber(null);
+                        user1.setPastEmails(new HashSet<>());
+                        user1.setEmail(maskEmail(user1.getEmail()));
+                        user1.setPartition(0);
+                        user1.setMfaRequirements(new ArrayList<>());
+                        user1.setVerifiedEmail(maskEmail(user1.getVerifiedEmail()));
+                        user1.setVerifiedNumber(maskNumber(user1.getVerifiedNumber()));
+
+                        user1.setAuthorities(new ArrayList<>());
+
+                        user1.setMobilePhone(maskNumber(user1.getMobilePhone()));
+                        user1.setProfilePic(null);
+                        user1.setCurrentCode(null);
+                        user1.setSubscriptionId(null);
+
+                    }
+                })
+                .map(ResponseEntity::ok);
 
     }
 
