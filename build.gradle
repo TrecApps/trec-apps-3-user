@@ -1,11 +1,11 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.2'
+    id 'org.springframework.boot' version '3.5.0'
     id 'jacoco'
 }
 
 ext {
-    springbootVersion = '3.4.2'
+    springbootVersion = '3.5.0'
 }
 
 apply plugin: 'java'
@@ -90,7 +90,7 @@ dependencies {
     implementation 'com.auth0:java-jwt:+'
     implementation 'org.bouncycastle:bcpkix-jdk18on:1.78.1'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:+'
-    implementation "com.azure.spring:spring-cloud-azure-starter-keyvault:5.19.0"
+    implementation "com.azure.spring:spring-cloud-azure-starter-keyvault:5.22.0"
     implementation 'software.amazon.awssdk:secretsmanager:2.25.56'
 
     implementation platform('com.google.cloud:libraries-bom:26.49.0')
