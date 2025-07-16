@@ -1,11 +1,11 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.0'
+    id 'org.springframework.boot' version '3.5.3'
     id 'jacoco'
 }
 
 ext {
-    springbootVersion = '3.5.0'
+    springbootVersion = '3.5.3'
 }
 
 apply plugin: 'java'
@@ -15,8 +15,8 @@ apply plugin: 'jacoco'
 group 'com.trecapps.users'
 version '0.0.1'
 
-targetCompatibility = 17
-sourceCompatibility = 17
+targetCompatibility = 21
+sourceCompatibility = 21
 
 repositories {
     mavenCentral()
@@ -38,12 +38,12 @@ jar{
 
 dependencies {
 
-    implementation 'org.projectlombok:lombok:1.18.24'
-    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+    implementation 'org.projectlombok:lombok:1.18.36'
+    annotationProcessor 'org.projectlombok:lombok:1.18.36'
     // Include the sdk as a dependency
 
     //Enable Trec-Auth
-    implementation 'com.trecapps.auth:TrecAuth:0.9.23-alpha'
+    implementation 'com.trecapps.auth:TrecAuth:0.9.24-alpha'
     implementation 'com.twilio.sdk:twilio:10.6.1'
     implementation 'dev.samstevens.totp:totp:1.7.1'  // MFA Support
     implementation 'commons-net:commons-net:3.11.1'  // Address known vulnerability in the samstevens dependency above
