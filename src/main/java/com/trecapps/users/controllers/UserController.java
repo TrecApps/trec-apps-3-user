@@ -1,5 +1,8 @@
 package com.trecapps.users.controllers;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.trecapps.auth.common.encryptors.IFieldEncryptor;
 import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.webflux.controllers.CookieBase;
@@ -7,9 +10,7 @@ import com.trecapps.auth.common.models.primary.TrecAccount;
 import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
 import com.trecapps.auth.webflux.services.IUserStorageServiceAsync;
 import com.trecapps.auth.webflux.services.TrecAccountServiceAsync;
-import com.trecapps.users.models.AuthenticationBody;
-import com.trecapps.users.models.PasswordChange;
-import com.trecapps.users.models.UserPost;
+import com.trecapps.users.models.*;
 import lombok.extern.log4j.Log4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,9 @@ public class UserController extends CookieControllerBase{
 
 
     @Value("${trecauth.app}") String defaultApp;
+
+    @Value("${trec-apps.styles}")
+    String[] styles;
 
 
     public UserController(
@@ -135,6 +139,73 @@ public class UserController extends CookieControllerBase{
                     return new ResponseEntity(token, HttpStatus.OK);
                 })
                 .onErrorResume(ResponseEntityException.class, ResponseEntityException::getEntityMono);
+
+    }
+
+    String join(String[] strings){
+        if(strings == null || strings.length == 0) return "";
+
+        StringBuilder ret = new StringBuilder(strings[0].trim());
+
+        for(int c = 1; c < strings.length; c++){
+            ret.append(",").append(strings[c].trim());
+        }
+
+        return ret.toString();
+    }
+
+    @PatchMapping("/styles")
+    public Mono<ResponseEntity<ResponseObj>> updateStyle(@RequestBody StyleSpec styleSpec, @RequestParam String app, Authentication authentication){
+
+        return Mono.just(authentication)
+                .map((Authentication auth) -> (TrecAuthentication)auth)
+                .flatMap((TrecAuthentication tAuth) -> {
+                    return this.userStorageService.getAccountById(tAuth.getUser().getId());
+                })
+                .map((Optional<TcUser> oUser) -> {
+                    if (oUser.isEmpty())
+                        throw new ObjectResponseException(HttpStatus.INTERNAL_SERVER_ERROR, "Can't find User Info");
+                    return oUser.get();
+                })
+                .flatMap((TcUser user) -> {
+                    boolean found = false;
+
+                    StyleSpec spec = new StyleSpec();
+                    spec.setUseDark(styleSpec.isUseDark());
+
+                    for(String style: styles){
+                        if(style.equals(styleSpec.getStyle())){
+                            spec.setStyle(style);
+                            break;
+                        }
+                    }
+
+                    if(spec.getStyle() == null){
+                        throw new ObjectResponseException(HttpStatus.BAD_REQUEST,
+                                String.format("Provided Style not supported. Please choose from one of the following: %s",join( this.styles))
+                                );
+                    }
+
+                    JsonNode extensions = user.getExtensions();
+                    if(!(extensions instanceof ObjectNode oExtensions))
+                        throw new ObjectResponseException(HttpStatus.INTERNAL_SERVER_ERROR, "User Extensions field mismatch");
+
+                    JsonNode jNode = oExtensions.get("styles");
+
+                    ObjectNode oNode;
+
+                    if(!(jNode instanceof ObjectNode)){
+                        oNode = new ObjectNode(new JsonNodeFactory(false));
+                        jNode = oNode;
+                        oExtensions.set("styles", jNode);
+                    } else oNode = (ObjectNode) jNode;
+
+                    oNode.set(app, spec.getObjectAsNode());
+
+                    return userStorageService.saveUserMono(user).thenReturn(ResponseObj.getInstance("Updated"));
+                })
+                .onErrorResume(ObjectResponseException.class, (ObjectResponseException e) -> Mono.just(e.toResponseObject()))
+                .map(ResponseObj::toEntity);
 
     }
 
