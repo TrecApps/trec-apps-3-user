@@ -4,6 +4,7 @@ import com.trecapps.auth.common.models.SessionListV2;
 import com.trecapps.auth.common.models.SessionV2;
 import com.trecapps.auth.common.models.TrecAuthentication;
 import com.trecapps.auth.webflux.services.V2SessionManagerAsync;
+import com.trecapps.users.models.ResponseObj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,5 +54,13 @@ public class SessionController {
                 .thenReturn(ResponseEntity.ok("Removed"));
 
 
+    }
+
+    @DeleteMapping
+    Mono<ResponseEntity<ResponseObj>> endSessions(@RequestBody List<String> sessionList, Authentication authentication){
+        return Mono.just((TrecAuthentication) authentication)
+                .flatMap((TrecAuthentication auth) -> sessionManager.removeSessionMono(auth.getAccount().getId(), sessionList))
+                .thenReturn(ResponseObj.getInstance("Removed!"))
+                .map(ResponseObj::toEntity);
     }
 }
