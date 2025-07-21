@@ -15,9 +15,9 @@ import org.springframework.web.reactive.config.EnableWebFlux;
         "com.trecapps.auth.webflux.*"
 }
 )                   // picture management
-@EntityScan({"com.trecapps.auth.models.primary.*",
-                "com.trecapps.auth.models.secondary.*",
-        "com.trecapps.pictures.models.*"})
+//@EntityScan({"com.trecapps.auth.models.primary.*",
+//                "com.trecapps.auth.models.secondary.*",
+//        "com.trecapps.pictures.models.*"})
 @EnableWebFlux
 public class Driver {
     public static void main(String[] args)
