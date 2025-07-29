@@ -1,6 +1,7 @@
 package com.trecapps.users.controllers;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.trecapps.auth.webflux.controllers.CookieBase;
 import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.common.models.primary.TrecAccount;
@@ -154,12 +155,36 @@ public class AuthController //extends CookieControllerBase
                                         TokenOptions options = new TokenOptions();
                                         options.setExpires(!Boolean.TRUE.equals(login.getStayLoggedIn()));
                                         options.setNeedsMfa(isMfaRequired(user, finalApp));
-                                        return jwtTokenService.generateToken(
+
+                                        JsonNode extensions = user.getExtensions();
+
+                                        String brandId = null;
+                                        if(extensions != null
+                                        // ToDo: see if the user has configured a Brand account for a specific app, once it has been set up
+                                        ) {
+
+                                        }
+
+                                        if(brandId == null && user.isAutoBrandAccount())
+                                        {
+                                            brandId = user.getDedicatedBrandAccount();
+                                        }
+
+                                        return brandId == null ? jwtTokenService.generateToken(
                                                 account,
                                                 exchange.getRequest().getHeaders().get("User-Agent").get(0),
                                                 null,
                                                 finalApp,
-                                                options);
+                                                options) : this.userStorageService.getBrandById(brandId)
+                                                .flatMap((Optional<TcBrands> oBrands) ->
+                                                    jwtTokenService.generateToken(
+                                                            account,
+                                                            exchange.getRequest().getHeaders().get("User-Agent").get(0),
+                                                            oBrands.orElse(null),
+                                                            finalApp,
+                                                            options)
+                                                );
+
                                     }).map((Optional<TokenTime> tt) ->
                                             tt.<IdBodyExtender<TokenTime>>map(tokenTime -> new IdBodyExtender<>(tokenTime, account.getId(), account.getUsername())).orElseGet(() -> new IdBodyExtender<>(account.getId(), account.getUsername())))
                                     ;
@@ -286,6 +311,20 @@ public class AuthController //extends CookieControllerBase
                               });
                           });
                         })
+                .flatMap((UserInfo userInfo) -> {
+                    if(userInfo.getBrand() != null) return Mono.just(userInfo);
+
+                    TcUser user1 = userInfo.getUser();
+
+                    if(user1.getDedicatedBrandAccount() != null && user1.isAutoBrandAccount()){
+                        return this.userStorageService.getBrandById(user1.getDedicatedBrandAccount())
+                                .map((Optional<TcBrands> oBrands) -> {
+                                    oBrands.ifPresent(userInfo::setBrand);
+                                    return userInfo;
+                                });
+                    }
+                    return Mono.just(userInfo);
+                })
                 .doOnNext((UserInfo retInfo) -> {
                     if(authentication1.isNeedsMfa()){
                         retInfo.setBrand(null);
