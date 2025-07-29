@@ -27,6 +27,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
@@ -292,7 +293,7 @@ public class AuthController //extends CookieControllerBase
 
         UserInfo ret = new UserInfo();
 
-        TcBrands brands = authentication1.getBrand();
+        TcBrands brands = authentication1.isNeedsMfa() ? null : authentication1.getBrand();
         TcUser user = authentication1.getUser();
         ret.setUser(user);
         ret.setBrand(brands);
@@ -312,7 +313,7 @@ public class AuthController //extends CookieControllerBase
                           });
                         })
                 .flatMap((UserInfo userInfo) -> {
-                    if(userInfo.getBrand() != null) return Mono.just(userInfo);
+                    if(authentication1.isNeedsMfa() || userInfo.getBrand() != null) return Mono.just(userInfo);
 
                     TcUser user1 = userInfo.getUser();
 
@@ -360,7 +361,27 @@ public class AuthController //extends CookieControllerBase
                         user1.setCurrentCode(null);
                         user1.setSubscriptionId(null);
 
+
                     }
+                })
+                .flatMap((UserInfo userInfo) -> {
+                    if(authentication1.isNeedsMfa()) return Mono.just(userInfo);
+
+                    Set<String> brandSet = userInfo.getUser().getBrands();
+
+                    if(brandSet == null || brandSet.isEmpty()) return Mono.just(userInfo);
+
+                    return Flux.fromIterable(brandSet)
+                            .flatMap(this.userStorageService::getBrandById)
+                            .map((Optional<TcBrands> oBrands) -> oBrands.orElseGet(TcBrands::new))
+                            .collectList()
+                            .map((List<TcBrands> brandList) -> {
+                                userInfo.setOwnedAccounts(brandList.stream().filter((TcBrands brand) -> {
+                                    Set<String> owners = brand.getOwners();
+                                    return owners != null && owners.contains(userInfo.getUser().getId());
+                                }).toList());
+                                return userInfo;
+                            });
                 })
                 .map(ResponseEntity::ok);
 
