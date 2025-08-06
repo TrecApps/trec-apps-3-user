@@ -63,7 +63,7 @@ public class BrandController {
                 .map(ResponseEntity::ok);
     }
 
-    @PostMapping(value = "/New", consumes = MediaType.TEXT_PLAIN_VALUE)
+    @PostMapping(value = "/New")
     Mono<ResponseEntity<ResponseObj>> submitNewBrand(@RequestBody NewBrand newBrand, Authentication authentication)
     {
         return Mono.just(((TrecAuthentication) authentication).getUser())
