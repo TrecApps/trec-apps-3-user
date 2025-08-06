@@ -2,10 +2,13 @@ package com.trecapps.users.controllers;
 
 import com.trecapps.auth.common.models.LoginToken;
 import com.trecapps.auth.common.models.TcBrands;
+import com.trecapps.auth.common.models.TcUser;
 import com.trecapps.auth.common.models.TrecAuthentication;
 import com.trecapps.auth.common.models.secondary.BrandEntry;
 import com.trecapps.auth.webflux.services.BrandServiceAsync;
-import com.trecapps.users.models.AuthenticationBody;
+import com.trecapps.auth.webflux.services.IUserStorageServiceAsync;
+import com.trecapps.users.models.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -17,18 +20,24 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/Brands")
 public class BrandController {
 
     @Autowired
     BrandServiceAsync brandService;
+
+    @Autowired
+    IUserStorageServiceAsync userStorageService;
 
     @Value("${trecauth.app}") String defaultApp;
 
@@ -55,14 +64,85 @@ public class BrandController {
     }
 
     @PostMapping(value = "/New", consumes = MediaType.TEXT_PLAIN_VALUE)
-    Mono<ResponseEntity<String>> submitNewBrand(RequestEntity<String> name, Authentication authentication)
+    Mono<ResponseEntity<ResponseObj>> submitNewBrand(@RequestBody NewBrand newBrand, Authentication authentication)
     {
-        return Mono.just(new AuthenticationBody<>((TrecAuthentication) authentication, name.getBody()))
-                .flatMap((AuthenticationBody<String> ab) -> brandService.createNewBrand(ab.getAuthentication().getAccount(), ab.getData()))
-                .map((String result) -> {
-                    String[] parts = result.split(":");
+        return Mono.just(((TrecAuthentication) authentication).getUser())
+                .flatMap((TcUser user) -> {
+                    TcBrands newBrandObj = new TcBrands();
+                    newBrandObj.setName(newBrand.getName());
+                    newBrandObj.setId(UUID.randomUUID().toString());
+                    newBrandObj.getOwners().add(user.getId());
 
-                    return new ResponseEntity<>(parts[1], HttpStatus.valueOf(Integer.parseInt(parts[0])));
+                    user.getBrands().add(newBrandObj.getId());
+                    if(newBrand.isMakeDedicated()){
+                        if(user.getDedicatedBrandAccount() == null){
+                            user.setDedicatedBrandAccount(newBrandObj.getId());
+                        } else throw new ObjectResponseException(HttpStatus.CONFLICT, "You already have a dedicated Brand account!");
+                    }
+
+                    return this.userStorageService.saveBrandMono(newBrandObj)
+                            .thenReturn(ResponseObj.getInstance("Success", newBrandObj.getId()))
+                            .flatMap((ResponseObj obj) ->{
+                                return userStorageService.saveUserMono(user).thenReturn(obj);
+                            }).onErrorResume(Throwable.class, (Throwable t) -> {
+                                log.error("Failed to save Brand {} for User {}", newBrandObj.getId(), user.getId());
+                                log.error("Error was ", t);
+                                return Mono.just(ResponseObj.getInstance(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to Create new Brand Account!"));
+                            });
+                })
+                .onErrorResume((ObjectResponseException.class), (ObjectResponseException e) -> Mono.just(e.toResponseObject()))
+                .map(ResponseObj::toEntity);
+//                .flatMap((TcUser user) -> {
+//                    return Flux.fromIterable(user.getBrands())
+//                            .flatMap((String brandId) -> this.userStorageService.getBrandById(brandId))
+//                            .collectList()
+//                            .map((List<Optional<TcBrands>> brands) -> {
+//                                return brands.stream()
+//                                        .filter(Optional::isPresent)
+//                                        .map(Optional::get)
+//                                        .toList();
+//                            });
+//                })
+//                .doOnNext((List<TcBrands> brands) -> {
+//                    if(newBrand.isMakeDedicated()){
+//
+//                    }
+//                })
+//        return Mono.just(new AuthenticationBody<>((TrecAuthentication) authentication, name.getBody()))
+//                .flatMap((AuthenticationBody<String> ab) -> brandService.createNewBrand(ab.getAuthentication().getAccount(), ab.getData()))
+//                .map((String result) -> {
+//                    String[] parts = result.split(":");
+//
+//                    return new ResponseEntity<>(parts[1], HttpStatus.valueOf(Integer.parseInt(parts[0])));
+//                });
+    }
+
+    @PatchMapping("/name")
+    Mono<ResponseEntity<ResponseObj>> updateName(Authentication authentication, @RequestBody Login details) {
+        TrecAuthentication trecAuthentication = (TrecAuthentication) authentication;
+
+        return this.userStorageService
+                .getBrandById(details.getUsername())
+                .map((Optional<TcBrands> oBrands) -> {
+                    if(oBrands.isEmpty()) throw new ObjectResponseException(HttpStatus.NOT_FOUND, "Brand Not Found");
+                    TcBrands brands = oBrands.get();
+
+                    if(brands.getOwners().contains(trecAuthentication.getUser().getId()))
+                        throw new ObjectResponseException(HttpStatus.FORBIDDEN, "You Do not own this brand Account!");
+                    return brands;
+                })
+                .flatMap((TcBrands brands) -> {
+                    brands.setName(details.getPassword());
+
+                    return this.userStorageService
+                            .saveBrandMono(brands)
+                            .thenReturn(ResponseObj.getInstance("Success!"))
+                            .map(ResponseObj::toEntity);
+                })
+                .onErrorResume(ObjectResponseException.class, (ObjectResponseException e) -> Mono.just(e.toResponseEntity()))
+                .onErrorResume(Throwable.class, (Throwable t) -> {
+                    log.error("Failed Name Update Operation! ", t);
+                    return Mono.just(ResponseObj.getInstance(HttpStatus.INTERNAL_SERVER_ERROR, "Error Updating Name").toEntity());
                 });
     }
 
