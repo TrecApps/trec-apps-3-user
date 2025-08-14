@@ -1,12 +1,12 @@
 package com.trecapps.users.controllers;
 
-import com.trecapps.auth.common.models.LoginToken;
+import com.trecapps.auth.common.models.*;
 import com.trecapps.auth.common.models.TcBrands;
-import com.trecapps.auth.common.models.TcUser;
-import com.trecapps.auth.common.models.TrecAuthentication;
 import com.trecapps.auth.common.models.secondary.BrandEntry;
 import com.trecapps.auth.webflux.services.BrandServiceAsync;
 import com.trecapps.auth.webflux.services.IUserStorageServiceAsync;
+import com.trecapps.auth.webflux.services.JwtTokenServiceAsync;
+import com.trecapps.auth.webflux.services.V2SessionManagerAsync;
 import com.trecapps.users.models.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +24,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,6 +39,12 @@ public class BrandController {
 
     @Autowired
     IUserStorageServiceAsync userStorageService;
+
+    @Autowired
+    JwtTokenServiceAsync jwtTokenService;
+
+    @Autowired
+    V2SessionManagerAsync sessionManager;
 
     @Value("${trecauth.app}") String defaultApp;
 
@@ -179,5 +186,49 @@ public class BrandController {
         });
 
 
+    }
+
+    @GetMapping(value="/drop-login")
+    Mono<ResponseEntity<LoginToken>> loginAsUser(
+            @RequestParam(value = "app", defaultValue = "") String app,
+            HttpServerRequest request
+    ) {
+        if("".equals(app))
+            app = defaultApp;
+        TrecAuthentication trecAuth = (TrecAuthentication) SecurityContextHolder.getContext().getAuthentication();
+
+        TokenOptions options = new TokenOptions();
+        options.setExpires(trecAuth.getLoginToken().getExpires_in() > 0);
+        options.setSession(trecAuth.getSessionId());
+
+
+        String finalApp = app;
+        return this.jwtTokenService.generateToken(trecAuth.getAccount(), request.requestHeaders().get("User-Agent"), null, app, options)
+                .map((oTime) -> {
+
+                    Optional<LoginToken> oRet;
+                    if (oTime.isEmpty()) {
+                        oRet = Optional.empty();
+                    } else {
+                        TokenTime time = (TokenTime) oTime.get();
+                        this.sessionManager.setBrand(trecAuth.getAccount().getId(), trecAuth.getSessionId(), null, finalApp);
+                        LoginToken ret = new LoginToken();
+                        ret.setAccess_token(time.getToken());
+                        OffsetDateTime exp = time.getExpiration();
+                        if (exp != null) {
+                            ret.setExpires_in(exp.getNano() - OffsetDateTime.now().getNano());
+                        }
+                        ret.setToken_type("User");
+
+                        oRet = Optional.of(ret);
+                    }
+                    return oRet;
+                }).map((Optional<LoginToken> ret) ->{
+                    if(ret.isEmpty())
+                        return new ResponseEntity<LoginToken>(HttpStatus.FORBIDDEN);
+                    ret.get().setToken_type("User");
+
+                    return new ResponseEntity<LoginToken>(ret.get(), HttpStatus.OK);
+                });
     }
 }
