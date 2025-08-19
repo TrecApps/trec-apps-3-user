@@ -47,7 +47,7 @@ public class SecurityConfig {
             "/Brands/list",
             "/Brands/New",
             "/Brands/NewOwner/**",
-            "/Brands/login",
+            "/Brands/login/**",
             "/profile/set/**",
             "/brandProfile/set/**"
     };

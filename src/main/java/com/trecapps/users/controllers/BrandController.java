@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.netty.http.server.HttpServerRequest;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -165,16 +165,17 @@ public class BrandController {
     Mono<ResponseEntity<LoginToken>> loginAs(
             @PathVariable("id") String uuid,
             @RequestParam(value = "app", defaultValue = "") String app,
-            HttpServerRequest request)
+            Authentication authentication,
+            ServerHttpRequest request)
     {
         if("".equals(app))
             app = defaultApp;
-        TrecAuthentication trecAuth = (TrecAuthentication) SecurityContextHolder.getContext().getAuthentication();
+        TrecAuthentication trecAuth = (TrecAuthentication) authentication;
 
         return brandService.loginAsBrand(
                 trecAuth,
                 uuid,
-                request.requestHeaders().get("User-Agent"),
+                request.getHeaders().getFirst("User-Agent"),
                 trecAuth.getSessionId(),
                 trecAuth.getLoginToken().getExpires_in() > 0, app
         ).map((Optional<LoginToken> ret) ->{
@@ -191,7 +192,7 @@ public class BrandController {
     @GetMapping(value="/drop-login")
     Mono<ResponseEntity<LoginToken>> loginAsUser(
             @RequestParam(value = "app", defaultValue = "") String app,
-            HttpServerRequest request
+            ServerHttpRequest request
     ) {
         if("".equals(app))
             app = defaultApp;
@@ -203,7 +204,7 @@ public class BrandController {
 
 
         String finalApp = app;
-        return this.jwtTokenService.generateToken(trecAuth.getAccount(), request.requestHeaders().get("User-Agent"), null, app, options)
+        return this.jwtTokenService.generateToken(trecAuth.getAccount(), request.getHeaders().getFirst("User-Agent"), null, app, options)
                 .map((oTime) -> {
 
                     Optional<LoginToken> oRet;
