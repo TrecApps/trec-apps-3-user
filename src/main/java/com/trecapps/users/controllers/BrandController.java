@@ -161,9 +161,9 @@ public class BrandController {
                 .map((Boolean result) -> new ResponseEntity<Void>(result ? HttpStatus.NO_CONTENT: HttpStatus.FORBIDDEN));
     }
 
-    @GetMapping(value = "/login/{id}")
+    @GetMapping(value = "/login")
     Mono<ResponseEntity<LoginToken>> loginAs(
-            @PathVariable("id") String uuid,
+            @RequestParam("id") String uuid,
             @RequestParam(value = "app", defaultValue = "") String app,
             Authentication authentication,
             ServerHttpRequest request)
