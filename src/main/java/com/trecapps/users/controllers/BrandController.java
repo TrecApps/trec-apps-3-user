@@ -177,7 +177,9 @@ public class BrandController {
                 uuid,
                 request.getHeaders().getFirst("User-Agent"),
                 trecAuth.getSessionId(),
-                trecAuth.getLoginToken().getExpires_in() > 0, app
+                trecAuth.getLoginToken().getExpires_in() > 0,
+                trecAuth.isHasMfa(),
+                app
         ).map((Optional<LoginToken> ret) ->{
             if(ret.isEmpty())
                 return new ResponseEntity<LoginToken>(HttpStatus.FORBIDDEN);
