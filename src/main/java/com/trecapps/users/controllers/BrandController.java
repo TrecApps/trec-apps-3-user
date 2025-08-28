@@ -84,6 +84,8 @@ public class BrandController {
                     if(newBrand.isMakeDedicated()){
                         if(user.getDedicatedBrandAccount() == null){
                             user.setDedicatedBrandAccount(newBrandObj.getId());
+
+                            newBrandObj.setDedicatedOwner(user.getId());
                         } else throw new ObjectResponseException(HttpStatus.CONFLICT, "You already have a dedicated Brand account!");
                     }
 
