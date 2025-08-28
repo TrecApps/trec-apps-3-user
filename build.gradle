@@ -15,8 +15,8 @@ apply plugin: 'jacoco'
 group 'com.trecapps.users'
 version '0.0.1'
 
-targetCompatibility = 21
-sourceCompatibility = 21
+//targetCompatibility = 21
+//sourceCompatibility = 21
 
 repositories {
     mavenCentral()
