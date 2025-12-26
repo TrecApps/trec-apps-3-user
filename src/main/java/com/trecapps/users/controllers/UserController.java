@@ -112,7 +112,7 @@ public class UserController extends CookieControllerBase{
                             new TokenOptions());
                 }).map((Optional<TokenTime> userTokenOpt) -> {
                     if(userTokenOpt.isEmpty())
-                        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+                        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
                     TcUser user = post.getBody().GetTcUserObject();
                     LoginToken token = new LoginToken();
                     token.setToken_type("User");

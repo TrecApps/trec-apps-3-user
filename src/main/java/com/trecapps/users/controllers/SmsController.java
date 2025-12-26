@@ -7,12 +7,10 @@ import com.trecapps.users.services.TrecSmsService;
 import com.twilio.exception.ApiException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -43,18 +41,18 @@ public class SmsController {
     }
 
     @PostMapping(consumes = MediaType.TEXT_PLAIN_VALUE)
-    public Mono<ResponseEntity> postVerification(@RequestBody String code,Authentication authentication)
+    public Mono<ResponseEntity<Void>> postVerification(@RequestBody String code,Authentication authentication)
     {
         return Mono.just(new AuthenticationBody<>((TrecAuthentication) authentication, code))
                 .flatMap((AuthenticationBody<String> ab) -> {
                     if(trecSmsService == null)
-                        return Mono.just(new ResponseEntity(HttpStatus.NOT_IMPLEMENTED));
+                        return Mono.just(new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED));
                     try {
                         return trecSmsService.validatePhone(ab.getAuthentication().getAccount(), ab.getData())
-                                .map((Boolean worked) -> new ResponseEntity(worked ? HttpStatus.NO_CONTENT : HttpStatus.BAD_REQUEST));
+                                .map((Boolean worked) -> new ResponseEntity<>(worked ? HttpStatus.NO_CONTENT : HttpStatus.BAD_REQUEST));
                     }catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                        return Mono.just(new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR));
+                        log.error("Error Detected in Verification: ", e);
+                        return Mono.just(new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
                     }
 
                 });
