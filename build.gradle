@@ -8,7 +8,7 @@ plugins {
 
 dependencyManagement {
     imports {
-        mavenBom("com.azure.spring:spring-cloud-azure-dependencies:6.1.0")
+        mavenBom("com.azure.spring:spring-cloud-azure-dependencies:7.0.0-beta.1")
     }
 }
 
@@ -115,7 +115,7 @@ dependencies {
     implementation "commons-io:commons-io:2.14.0"
     implementation "com.azure:azure-identity"
     implementation "io.grpc:grpc-netty-shaded:1.75.0"   // For com.google.cloud:libraries-bom:26.49.0
-    implementation "io.netty:netty-codec-http:4.2.8.Final"
+//    implementation "io.netty:netty-codec-http:4.2.8.Final"
 }
 
 test {
