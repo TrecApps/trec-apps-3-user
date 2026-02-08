@@ -8,7 +8,7 @@ plugins {
 
 dependencyManagement {
     imports {
-        mavenBom("com.azure.spring:spring-cloud-azure-dependencies:7.0.0-beta.1")
+        mavenBom("com.azure.spring:spring-cloud-azure-dependencies:7.0.0")
     }
 }
 
@@ -105,7 +105,7 @@ dependencies {
     implementation 'com.google.cloud:google-cloud-storage'      // Use GCP Cloud Storage for Storage
     implementation 'com.google.cloud:google-cloud-secretmanager:2.42.0'         // Getting Secret info from GCP Secret Manager
 
-    implementation 'com.mysql:mysql-connector-j:8.4.0' // mySQL
+    implementation 'com.mysql:mysql-connector-j:9.4.0' // mySQL
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
